@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { destroyDockerBridge, initDockerBridge } from "./backend/bridge";
 import Titlebar from "./components/Titlebar";
+import StatusBar from "./components/Statusbar";
+import Sidebar from "./components/Sidebar";
 
 function App() {
   useEffect(() => {
@@ -14,6 +16,10 @@ function App() {
       style={{ background: "var(--bg0)" }}
     >
       <Titlebar />
+      <div className="flex flex-1 overflow-hidden">
+        <Sidebar />
+      </div>
+      <StatusBar />
     </div>
   );
 }
