@@ -1,4 +1,5 @@
 import {
+  Archive,
   Box,
   Database,
   FileText,
@@ -120,7 +121,7 @@ export default function Sidebar() {
                 ? "warn"
                 : "count",
         },
-        { id: "registry", label: "Registry", icon: "◎" },
+        { id: "registry", label: "Registry", icon: <Archive size={16} /> },
       ],
     },
     {

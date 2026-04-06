@@ -3,6 +3,7 @@ import { destroyDockerBridge, initDockerBridge } from "./backend/bridge";
 import Titlebar from "./components/Titlebar";
 import StatusBar from "./components/Statusbar";
 import Sidebar from "./components/Sidebar";
+import MainContent from "./components/MainContent";
 
 function App() {
   useEffect(() => {
@@ -18,6 +19,7 @@ function App() {
       <Titlebar />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
+        <MainContent />
       </div>
       <StatusBar />
     </div>
