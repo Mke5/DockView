@@ -1,0 +1,174 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap");
+@import "tailwindcss";
+@reference "tailwindcss";
+
+@layer base {
+    :root {
+        --bg0: #0d0f12;
+        --bg1: #13161b;
+        --bg2: #1a1e25;
+        --bg3: #21262f;
+        --bg4: #2a3040;
+        --border: rgba(255, 255, 255, 0.07);
+        --border-lit: rgba(255, 255, 255, 0.13);
+        --text-primary: #e8ecf0;
+        --text-secondary: #7a8696;
+        --text-muted: #4a5568;
+        --accent: #00d4ff;
+        --accent-dim: rgba(0, 212, 255, 0.12);
+        --accent-glow: rgba(0, 212, 255, 0.25);
+        --green: #00e676;
+        --green-dim: rgba(0, 230, 118, 0.12);
+        --red: #ff5252;
+        --red-dim: rgba(255, 82, 82, 0.12);
+        --amber: #ffab40;
+        --amber-dim: rgba(255, 171, 64, 0.12);
+        --purple: #b388ff;
+        --purple-dim: rgba(179, 136, 255, 0.12);
+        --sidebar-w: 220px;
+        --topbar-h: 40px;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    html,
+    body,
+    #root {
+        height: 100%;
+        overflow: hidden;
+    }
+
+    body {
+        font-family: "DM Sans", sans-serif;
+        background-color: var(--bg0);
+        color: var(--text-primary);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: var(--bg4);
+        border-radius: 2px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--text-muted);
+    }
+}
+
+@layer components {
+    .font-mono {
+        font-family: "JetBrains Mono", monospace;
+    }
+
+    /* Status badge variants */
+    .badge-running {
+        @apply inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide;
+        background: var(--green-dim);
+        color: var(--green);
+    }
+    .badge-stopped {
+        @apply inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide;
+        background: var(--bg4);
+        color: var(--text-muted);
+    }
+    .badge-paused {
+        @apply inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide;
+        background: var(--amber-dim);
+        color: var(--amber);
+    }
+    .badge-exited {
+        @apply inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide;
+        background: var(--red-dim);
+        color: var(--red);
+    }
+
+    /* Port tag */
+    .port-tag {
+        @apply inline-block px-1.5 py-0.5 rounded text-[10px] font-mono font-medium;
+        background: var(--purple-dim);
+        color: var(--purple);
+    }
+
+    /* Nav item */
+    .nav-item {
+        @apply flex items-center gap-2.5 px-2.5 py-1.5 rounded cursor-pointer transition-all duration-100 text-sm font-medium;
+        color: var(--text-secondary);
+        border: 1px solid transparent;
+    }
+    .nav-item:hover {
+        background: var(--bg3);
+        color: var(--text-primary);
+    }
+    .nav-item.active {
+        background: var(--accent-dim);
+        border-color: rgba(0, 212, 255, 0.2);
+        color: var(--accent);
+    }
+
+    /* Toolbar button */
+    .toolbar-btn {
+        @apply flex items-center gap-1.5 px-3 py-1.5 rounded text-[11px] font-medium cursor-pointer transition-all duration-150;
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+    }
+    .toolbar-btn:hover {
+        background: var(--bg3);
+        border-color: var(--border-lit);
+        color: var(--text-primary);
+    }
+    .toolbar-btn-primary {
+        @apply flex items-center gap-1.5 px-3 py-1.5 rounded text-[11px] font-semibold cursor-pointer transition-all duration-150;
+        background: var(--accent);
+        border: 1px solid var(--accent);
+        color: #000;
+    }
+    .toolbar-btn-primary:hover {
+        background: #33ddff;
+    }
+
+    /* Filter tab */
+    .filter-tab {
+        @apply px-2.5 py-1 rounded text-[11px] cursor-pointer transition-all duration-100 font-mono;
+        color: var(--text-muted);
+        border: 1px solid transparent;
+    }
+    .filter-tab:hover {
+        color: var(--text-secondary);
+        background: var(--bg3);
+    }
+    .filter-tab.active {
+        color: var(--accent);
+        background: var(--accent-dim);
+        border-color: rgba(0, 212, 255, 0.2);
+    }
+
+    /* Pulse animation for running status */
+    .pulse-green {
+        animation: pulseGreen 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulseGreen {
+        0%,
+        100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.4;
+        }
+    }
+
+    .pulse-engine {
+        animation: pulseGreen 2s ease-in-out infinite;
+    }
+}
