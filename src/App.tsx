@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { destroyDockerBridge, initDockerBridge } from "./backend/bridge";
 
 function App() {
   useEffect(() => {
