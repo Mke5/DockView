@@ -1,4 +1,5 @@
 import { useAppStore } from "../store/";
+import ContainersView from "./views/ContainersView";
 import PlaceholderView from "./views/PlaceholderView";
 
 export default function MainContent() {
@@ -17,7 +18,7 @@ export default function MainContent() {
 function renderView(view: string) {
   switch (view) {
     case "containers":
-      return <PlaceholderView title="Containers" />;
+      return <ContainersView />;
     case "images":
       return <PlaceholderView title="Images" />;
     case "volumes":
