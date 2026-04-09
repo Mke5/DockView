@@ -212,7 +212,7 @@ export default function ContainersView() {
           style={{ background: "var(--border)" }}
         />
 
-        <div className="flex gap-0.5">
+        <div className="flex gap-1">
           {FILTER_TABS.map((tab) => (
             <button
               key={tab.id}
@@ -224,7 +224,7 @@ export default function ContainersView() {
           ))}
         </div>
 
-        <div className="ml-auto flex gap-1.5">
+        <div className="ml-auto flex gap-1.5 ">
           {/* ── Group dropdown ── */}
           <div ref={groupRef} className="relative">
             <button

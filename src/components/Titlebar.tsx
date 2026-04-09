@@ -77,7 +77,7 @@ export default function Titlebar() {
       style={
         {
           background: "rgba(20,20,20,0.6)",
-          backdropFilter: "blur(10px)",
+          // backdropFilter: "blur(10px)",
           borderBottom: "1px solid var(--border)",
           WebkitAppRegion: "drag",
         } as React.CSSProperties
