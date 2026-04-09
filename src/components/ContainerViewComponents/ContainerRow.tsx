@@ -152,7 +152,7 @@ export function ContainerRow({
         style={{ background: rowBg, borderColor: rowBorder, width: "8%" }}
         className="group"
       >
-        <div className="flex items-center gap-0.5 transition-opacity duration-150">
+        <div className="flex items-center gap-1 transition-opacity duration-150">
           <RowBtn title="Logs">
             <FileText className="w-3 h-3" />
           </RowBtn>

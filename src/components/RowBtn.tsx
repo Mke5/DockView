@@ -3,15 +3,18 @@ export function RowBtn({
   title,
   danger,
   onClick,
+  disabled,
 }: {
   children: React.ReactNode;
   title: string;
   danger?: boolean;
+  disabled?: boolean;
   onClick?: () => void;
 }) {
   return (
     <button
       title={title}
+      disabled={disabled}
       onClick={(e) => {
         e.stopPropagation();
         onClick?.();

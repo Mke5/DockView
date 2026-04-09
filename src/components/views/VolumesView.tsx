@@ -1,6 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { useAppStore, Volume } from "../../store";
-import { useVolumeStore, VolumeFilter } from "../../store/volumeStore";
+import {
+  useVolumeStore,
+  VolumeFilter,
+  VolumeSortKey,
+} from "../../store/volumeStore";
+import { Dropdown, DropdownCheckItem, DropdownHeader } from "../DropDown";
+import {
+  BrowseModal,
+  CreateVolumeModal,
+  StorageSummary,
+} from "../VolumesViewComponents/Modal";
+import { DetailPanel } from "../VolumesViewComponents/DetailPanel";
+import { VolumeRow } from "../VolumesViewComponents/VolumeRow";
+import { ArrowDown, ArrowUp, Plus, RefreshCcw, Scissors } from "lucide-react";
 
 const FILTER_TABS: { id: VolumeFilter; label: string }[] = [
   { id: "all", label: "All" },
@@ -14,6 +27,36 @@ const SORT_OPTIONS: { key: VolumeSortKey; label: string }[] = [
   { key: "created", label: "Created" },
   { key: "driver", label: "Driver" },
 ];
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+
+function sortVolumes(list: Volume[], key: VolumeSortKey, dir: "asc" | "desc") {
+  return [...list].sort((a, b) => {
+    let cmp = 0;
+    switch (key) {
+      case "name":
+        cmp = a.name.localeCompare(b.name);
+        break;
+      case "size":
+        cmp = a.sizeBytes - b.sizeBytes;
+        break;
+      case "created":
+        cmp = a.created.localeCompare(b.created);
+        break;
+      case "driver":
+        cmp = a.driver.localeCompare(b.driver);
+        break;
+    }
+    return dir === "asc" ? cmp : -cmp;
+  });
+}
+
+function totalSize(volumes: Volume[]) {
+  const bytes = volumes.reduce((a, v) => a + v.sizeBytes, 0);
+  return bytes >= 1e9
+    ? `${(bytes / 1e9).toFixed(1)} GB`
+    : `${(bytes / 1e6).toFixed(0)} MB`;
+}
 
 export default function VolumesView() {
   const {
@@ -97,16 +140,18 @@ export default function VolumesView() {
           className="toolbar-btn-primary"
           onClick={() => setShowCreateModal(true)}
         >
-          ＋ Create volume
+          <Plus className="w-4 h-4" /> Create volume
         </button>
-        <button className="toolbar-btn">⟳ Refresh</button>
+        <button className="toolbar-btn">
+          <RefreshCcw className="w-4 h-4" /> Refresh
+        </button>
 
         <div
           className="w-px h-5 mx-1"
           style={{ background: "var(--border)" }}
         />
 
-        <div className="flex gap-0.5">
+        <div className="flex gap-1">
           {FILTER_TABS.map((tab) => (
             <button
               key={tab.id}
@@ -129,7 +174,7 @@ export default function VolumesView() {
               }}
               onClick={() => setConfirmPrune(true)}
             >
-              ✦ Prune unused ({unusedCount})
+              <Scissors className="w-4 h-4" /> Prune unused ({unusedCount})
             </button>
           )}
           {confirmPrune && (
@@ -178,7 +223,12 @@ export default function VolumesView() {
               }
               onClick={() => setShowSortMenu((v) => !v)}
             >
-              {sortDir === "asc" ? "↑" : "↓"} Sort
+              {sortDir === "asc" ? (
+                <ArrowUp className="w-3 h-3" />
+              ) : (
+                <ArrowDown className="w-3 h-3" />
+              )}{" "}
+              Sort
               {sortKey !== "name" && (
                 <span
                   className="text-[9px] px-1 py-px rounded font-mono"
@@ -200,11 +250,13 @@ export default function VolumesView() {
                     label={opt.label}
                     checked={sortKey === opt.key}
                     suffix={
-                      sortKey === opt.key
-                        ? sortDir === "asc"
-                          ? "↑ asc"
-                          : "↓ desc"
-                        : undefined
+                      sortKey === opt.key ? (
+                        sortDir === "asc" ? (
+                          <ArrowUp className="w-3 h-3 inline" />
+                        ) : (
+                          <ArrowDown className="w-3 h-3 inline" />
+                        )
+                      ) : undefined
                     }
                     onClick={() => setSort(opt.key)}
                   />
@@ -280,7 +332,11 @@ export default function VolumesView() {
                         {h.label}
                         {h.key && sortKey === h.key && (
                           <span style={{ color: "var(--accent)" }}>
-                            {sortDir === "asc" ? "↑" : "↓"}
+                            {sortDir === "asc" ? (
+                              <ArrowUp className="w-3 h-3 inline" />
+                            ) : (
+                              <ArrowDown className="w-3 h-3 inline" />
+                            )}
                           </span>
                         )}
                       </span>

@@ -1,55 +1,36 @@
-import { Bug, Code, Play, Trash2, Upload } from "lucide-react";
-import { DockerImage } from "../../store";
+import { FolderOpen, HardDrive, X } from "lucide-react";
+import { Volume } from "../../store";
 import { Cell } from "../Cell";
 import { RowBtn } from "../RowBtn";
-import { SizeBar } from "./Helpers";
+import { sizeColor, VolumeIcon } from "./Modal";
 
-const REPO_COLORS: Record<string, { bg: string; color: string }> = {
-  nginx: { bg: "rgba(0,212,255,0.12)", color: "#00d4ff" },
-  postgres: { bg: "rgba(100,181,246,0.15)", color: "#64b5f6" },
-  redis: { bg: "rgba(255,82,82,0.12)", color: "#ff5252" },
-  node: { bg: "rgba(0,230,118,0.12)", color: "#00e676" },
-  python: { bg: "rgba(255,213,79,0.12)", color: "#ffd54f" },
-  alpine: { bg: "rgba(179,136,255,0.12)", color: "#b388ff" },
-  ubuntu: { bg: "rgba(255,171,64,0.12)", color: "#ffab40" },
-  traefik: { bg: "rgba(0,230,118,0.12)", color: "#00e676" },
-  mysql: { bg: "rgba(255,171,64,0.12)", color: "#ffab40" },
-  mongo: { bg: "rgba(0,230,118,0.12)", color: "#00e676" },
-};
-
-export function repoColor(repo: string) {
-  return (
-    REPO_COLORS[repo.toLowerCase()] ?? {
-      bg: "var(--bg4)",
-      color: "var(--text-muted)",
-    }
-  );
+function shortMount(path: string) {
+  const parts = path.split("/");
+  if (parts.length > 6) return "…/" + parts.slice(-3).join("/");
+  return path;
 }
 
-export function ImageRow({
-  image: img,
+export function VolumeRow({
+  volume: v,
   selected,
   onSelect,
   onRemove,
-  onRun,
-  onPush,
+  onBrowse,
 }: {
-  image: DockerImage;
+  volume: Volume;
   selected: boolean;
   onSelect: () => void;
   onRemove: () => void;
-  onRun: () => void;
-  onPush: () => void;
+  onBrowse: () => void;
 }) {
-  const { bg, color } = repoColor(img.repository);
   const rowBg = selected ? "var(--accent-dim)" : "var(--bg1)";
   const rowBorder = selected ? "rgba(0,212,255,0.25)" : "var(--border)";
 
   return (
     <tr
+      className="group"
       onClick={onSelect}
       style={{ cursor: "pointer" }}
-      className="group"
       onMouseEnter={(e) => {
         if (!selected)
           Array.from(e.currentTarget.cells).forEach((td) => {
@@ -67,37 +48,32 @@ export function ImageRow({
           });
       }}
     >
-      {/* Repository */}
+      {/* Name */}
       <Cell
         first
-        style={{ background: rowBg, borderColor: rowBorder, width: "26%" }}
+        style={{ background: rowBg, borderColor: rowBorder, width: "22%" }}
       >
         <div className="flex items-center gap-2.5">
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold font-mono shrink-0 uppercase"
-            style={{ background: bg, color }}
-          >
-            {img.repository.slice(0, 2)}
-          </div>
+          <VolumeIcon inUse={v.inUse} sizeBytes={v.sizeBytes} />
           <div>
             <div
               className="text-xs font-semibold font-mono"
               style={{ color: "var(--text-primary)" }}
             >
-              {img.repository}
+              {v.name}
             </div>
             <div
               className="text-[10px] font-mono"
               style={{ color: "var(--text-muted)" }}
             >
-              {img.digest.slice(0, 20)}…
+              {v.scope} · {v.driver}
             </div>
           </div>
         </div>
       </Cell>
 
-      {/* Tag */}
-      <Cell style={{ background: rowBg, borderColor: rowBorder, width: "12%" }}>
+      {/* Driver */}
+      <Cell style={{ background: rowBg, borderColor: rowBorder, width: "9%" }}>
         <span
           className="inline-block px-2 py-0.5 rounded text-[10px] font-mono font-medium"
           style={{
@@ -106,38 +82,58 @@ export function ImageRow({
             color: "var(--text-secondary)",
           }}
         >
-          {img.tag}
+          {v.driver}
         </span>
       </Cell>
 
-      {/* Image ID */}
-      <Cell style={{ background: rowBg, borderColor: rowBorder, width: "13%" }}>
+      {/* Mount point */}
+      <Cell style={{ background: rowBg, borderColor: rowBorder, width: "30%" }}>
         <span
           className="text-[10px] font-mono"
           style={{ color: "var(--text-muted)" }}
+          title={v.mountpoint}
         >
-          {img.shortId}
+          {shortMount(v.mountpoint)}
         </span>
       </Cell>
 
       {/* Size */}
       <Cell style={{ background: rowBg, borderColor: rowBorder, width: "10%" }}>
-        <SizeBar sizeBytes={img.sizeBytes} label={img.size} />
+        <div className="flex items-center gap-1.5">
+          <div
+            className="w-10 h-1 rounded-full overflow-hidden shrink-0"
+            style={{ background: "var(--bg4)" }}
+          >
+            <div
+              className="h-full rounded-full"
+              style={{
+                width: `${Math.min((v.sizeBytes / 1_500_000_000) * 100, 100)}%`,
+                background: sizeColor(v.sizeBytes),
+              }}
+            />
+          </div>
+          <span
+            className="text-[11px] font-mono whitespace-nowrap"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            {v.size}
+          </span>
+        </div>
       </Cell>
 
       {/* Created */}
-      <Cell style={{ background: rowBg, borderColor: rowBorder, width: "13%" }}>
+      <Cell style={{ background: rowBg, borderColor: rowBorder, width: "10%" }}>
         <span
           className="text-[10px] font-mono whitespace-nowrap"
           style={{ color: "var(--text-muted)" }}
         >
-          {img.created}
+          {v.created}
         </span>
       </Cell>
 
       {/* Status */}
       <Cell style={{ background: rowBg, borderColor: rowBorder, width: "11%" }}>
-        {img.inUse ? (
+        {v.inUse ? (
           <span
             className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-semibold uppercase"
             style={{ background: "var(--green-dim)", color: "var(--green)" }}
@@ -156,7 +152,7 @@ export function ImageRow({
             <span
               className="w-1.5 h-1.5 rounded-full shrink-0"
               style={{ background: "var(--text-muted)" }}
-            />
+            />{" "}
             Unused
           </span>
         )}
@@ -169,66 +165,21 @@ export function ImageRow({
       >
         <div className="flex items-center gap-1 transition-opacity duration-150">
           <RowBtn title="Inspect" onClick={onSelect}>
-            <Code className="w-3 h-3" />
+            <HardDrive className="w-3 h-3" />
           </RowBtn>
-          <RowBtn title="Run container" onClick={onRun}>
-            <Play className="w-3 h-3" />
+          <RowBtn title="Browse files" onClick={onBrowse}>
+            <FolderOpen className="w-3 h-3" />
           </RowBtn>
-          <RowBtn title="Push to registry" onClick={onPush}>
-            <Upload className="w-3 h-3" />
-          </RowBtn>
-          <RowBtn title="Remove" danger onClick={onRemove}>
-            <Trash2 className="w-3 h-3" />
+          <RowBtn
+            title={v.inUse ? "Stop containers first" : "Remove"}
+            danger
+            disabled={v.inUse}
+            onClick={onRemove}
+          >
+            <X className="w-3 h-3" />
           </RowBtn>
         </div>
       </Cell>
     </tr>
-  );
-}
-
-export function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <p
-        className="text-[9px] font-semibold uppercase tracking-widest font-mono mb-2"
-        style={{ color: "var(--text-muted)" }}
-      >
-        {title}
-      </p>
-      {children}
-    </div>
-  );
-}
-
-export function InfoRow({
-  label,
-  value,
-  mono,
-}: {
-  label: string;
-  value: string;
-  mono?: boolean;
-}) {
-  return (
-    <div
-      className="flex justify-between items-center py-1"
-      style={{ borderBottom: "1px solid var(--border)" }}
-    >
-      <span className="text-[11px]" style={{ color: "var(--text-muted)" }}>
-        {label}
-      </span>
-      <span
-        className={`text-[11px] ${mono ? "font-mono" : ""}`}
-        style={{ color: "var(--text-secondary)" }}
-      >
-        {value}
-      </span>
-    </div>
   );
 }
