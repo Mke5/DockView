@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { Dropdown, DropdownCheckItem, DropdownHeader } from "../DropDown";
 import { ImageRow } from "../ImageViewComponents/ImageRow";
+import { DetailPanel } from "../ImageViewComponents/DetailsPanel";
+import { PullModal, PushModal } from "../ImageViewComponents/Modal";
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 
@@ -387,7 +389,32 @@ export default function ImagesView() {
             </table>
           </div>
         </div>
+
+        {/* Detail panel */}
+        {selected && (
+          <DetailPanel
+            image={selected}
+            onClose={() => selectImage(null)}
+            onRemove={() => {
+              removeImage(selected.id);
+              selectImage(null);
+            }}
+            onRun={() => setShowRunModal(selected)}
+            onPush={() => setShowPushModal(true)}
+          />
+        )}
       </div>
+
+      {/* Modals */}
+      {showPullModal && (
+        <PullModal
+          onClose={() => setShowPullModal(false)}
+          onPulled={addImage}
+        />
+      )}
+      {showPushModal && (
+        <PushModal onClose={() => setShowPushModal(false)} image={selected} />
+      )}
     </div>
   );
 }

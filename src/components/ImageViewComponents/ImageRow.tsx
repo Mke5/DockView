@@ -2,8 +2,29 @@ import { Bug, Code, Play, Trash2, Upload } from "lucide-react";
 import { DockerImage } from "../../store";
 import { Cell } from "../Cell";
 import { RowBtn } from "../RowBtn";
-import { repoColor } from "./Config";
 import { SizeBar } from "./Helpers";
+
+const REPO_COLORS: Record<string, { bg: string; color: string }> = {
+  nginx: { bg: "rgba(0,212,255,0.12)", color: "#00d4ff" },
+  postgres: { bg: "rgba(100,181,246,0.15)", color: "#64b5f6" },
+  redis: { bg: "rgba(255,82,82,0.12)", color: "#ff5252" },
+  node: { bg: "rgba(0,230,118,0.12)", color: "#00e676" },
+  python: { bg: "rgba(255,213,79,0.12)", color: "#ffd54f" },
+  alpine: { bg: "rgba(179,136,255,0.12)", color: "#b388ff" },
+  ubuntu: { bg: "rgba(255,171,64,0.12)", color: "#ffab40" },
+  traefik: { bg: "rgba(0,230,118,0.12)", color: "#00e676" },
+  mysql: { bg: "rgba(255,171,64,0.12)", color: "#ffab40" },
+  mongo: { bg: "rgba(0,230,118,0.12)", color: "#00e676" },
+};
+
+export function repoColor(repo: string) {
+  return (
+    REPO_COLORS[repo.toLowerCase()] ?? {
+      bg: "var(--bg4)",
+      color: "var(--text-muted)",
+    }
+  );
+}
 
 export function ImageRow({
   image: img,
@@ -150,32 +171,13 @@ export function ImageRow({
           <RowBtn title="Inspect" onClick={onSelect}>
             <Code className="w-3 h-3" />
           </RowBtn>
-          <RowBtn
-            title="Run container"
-            onClick={(e) => {
-              e.stopPropagation();
-              onRun();
-            }}
-          >
+          <RowBtn title="Run container" onClick={onRun}>
             <Play className="w-3 h-3" />
           </RowBtn>
-          <RowBtn
-            title="Push to registry"
-            onClick={(e) => {
-              e.stopPropagation();
-              onPush();
-            }}
-          >
+          <RowBtn title="Push to registry" onClick={onPush}>
             <Upload className="w-3 h-3" />
           </RowBtn>
-          <RowBtn
-            title="Remove"
-            danger
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemove();
-            }}
-          >
+          <RowBtn title="Remove" danger onClick={onRemove}>
             <Trash2 className="w-3 h-3" />
           </RowBtn>
         </div>

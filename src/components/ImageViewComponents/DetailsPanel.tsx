@@ -1,8 +1,8 @@
+import { Play, Upload, X } from "lucide-react";
 import { DockerImage } from "../../store";
 import { CloseBtn } from "./CloseBtn";
-import { repoColor } from "./Config";
 import { SizeBar } from "./Helpers";
-import { InfoRow, Section } from "./ImageRow";
+import { InfoRow, repoColor, Section } from "./ImageRow";
 
 export function DetailPanel({
   image: img,
@@ -71,13 +71,13 @@ export function DetailPanel({
             }}
             onClick={onRun}
           >
-            ▶ Run
+            <Play className="w-3 h-3" /> Run
           </button>
           <button
             className="toolbar-btn flex-1 justify-center"
             onClick={onPush}
           >
-            ⬆ Push
+            <Upload className="w-3 h-3" /> Push
           </button>
           <button
             className="toolbar-btn px-2.5"
@@ -89,7 +89,7 @@ export function DetailPanel({
                 : "Remove image"
             }
           >
-            ✕
+            <X className="w-3 h-3" />
           </button>
         </div>
 
