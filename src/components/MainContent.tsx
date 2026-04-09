@@ -1,5 +1,6 @@
 import { useAppStore } from "../store/";
 import ContainersView from "./views/ContainersView";
+import ImagesView from "./views/ImagesView";
 import PlaceholderView from "./views/PlaceholderView";
 
 export default function MainContent() {
@@ -20,7 +21,7 @@ function renderView(view: string) {
     case "containers":
       return <ContainersView />;
     case "images":
-      return <PlaceholderView title="Images" />;
+      return <ImagesView />;
     case "volumes":
       return <PlaceholderView title="Volumes" />;
     case "networks":
