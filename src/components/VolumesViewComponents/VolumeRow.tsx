@@ -132,7 +132,7 @@ export function VolumeRow({
       </Cell>
 
       {/* Status */}
-      <Cell style={{ background: rowBg, borderColor: rowBorder, width: "11%" }}>
+      <Cell style={{ background: rowBg, borderColor: rowBorder, width: "1%" }}>
         {v.inUse ? (
           <span
             className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-semibold uppercase"
