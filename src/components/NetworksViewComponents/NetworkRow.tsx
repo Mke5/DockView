@@ -1,3 +1,4 @@
+import { Info, Link, Network as NetworkIcon, X } from "lucide-react";
 import { Network } from "../../store";
 import { Cell } from "../Cell";
 import { RowBtn } from "../RowBtn";
@@ -11,7 +12,7 @@ const DRIVER_COLOR: Record<string, { bg: string; color: string }> = {
   none: { bg: "var(--bg4)", color: "var(--text-muted)" },
 };
 
-function driverColor(driver: string) {
+export function driverColor(driver: string) {
   return (
     DRIVER_COLOR[driver.toLowerCase()] ?? {
       bg: "var(--bg3)",
@@ -69,7 +70,7 @@ export function NetworkRow({
             className="w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0"
             style={{ background: dc.bg, color: dc.color }}
           >
-            ⬡
+            <NetworkIcon className="w-4 h-4" />
           </div>
           <div>
             <div className="flex items-center gap-1.5">
@@ -223,12 +224,12 @@ export function NetworkRow({
         last
         style={{ background: rowBg, borderColor: rowBorder, width: "8%" }}
       >
-        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+        <div className="flex items-center gap-1 transition-opacity duration-150">
           <RowBtn title="Connect container" onClick={onConnect}>
-            ⊕
+            <Link className="w-4 h-4" />
           </RowBtn>
           <RowBtn title="Inspect" onClick={onSelect}>
-            ⊙
+            <Info className="w-4 h-4" />
           </RowBtn>
           <RowBtn
             title={
@@ -238,7 +239,7 @@ export function NetworkRow({
             disabled={n.isDefault}
             onClick={onRemove}
           >
-            ✕
+            <X className="w-4 h-4" />
           </RowBtn>
         </div>
       </Cell>
@@ -248,7 +249,7 @@ export function NetworkRow({
 
 // SHARED COMPONENTS
 
-function Flag({
+export function Flag({
   children,
   color,
 }: {
@@ -266,5 +267,32 @@ function Flag({
     >
       {children}
     </span>
+  );
+}
+
+export function ViewToggle({
+  children,
+  active,
+  onClick,
+  last,
+}: {
+  children: React.ReactNode;
+  active: boolean;
+  onClick: () => void;
+  last?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="px-3 py-1.5 text-[11px] font-medium cursor-pointer transition-all duration-150"
+      style={{
+        background: active ? "var(--accent-dim)" : "var(--bg2)",
+        color: active ? "var(--accent)" : "var(--text-muted)",
+        borderRight: !last ? "1px solid var(--border)" : "none",
+        border: "none",
+      }}
+    >
+      {children}
+    </button>
   );
 }

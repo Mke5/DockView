@@ -169,16 +169,16 @@ export function ImageRow({
       >
         <div className="flex items-center gap-1 transition-opacity duration-150">
           <RowBtn title="Inspect" onClick={onSelect}>
-            <Code className="w-3 h-3" />
+            <Code className="w-4 h-4" />
           </RowBtn>
           <RowBtn title="Run container" onClick={onRun}>
-            <Play className="w-3 h-3" />
+            <Play className="w-4 h-4" />
           </RowBtn>
           <RowBtn title="Push to registry" onClick={onPush}>
-            <Upload className="w-3 h-3" />
+            <Upload className="w-4 h-4" />
           </RowBtn>
           <RowBtn title="Remove" danger onClick={onRemove}>
-            <Trash2 className="w-3 h-3" />
+            <Trash2 className="w-4 h-4" />
           </RowBtn>
         </div>
       </Cell>

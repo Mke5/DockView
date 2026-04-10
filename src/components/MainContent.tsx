@@ -1,6 +1,7 @@
 import { useAppStore } from "../store/";
 import ContainersView from "./views/ContainersView";
 import ImagesView from "./views/ImagesView";
+import NetworksView from "./views/NetworksView";
 import PlaceholderView from "./views/PlaceholderView";
 import VolumesView from "./views/VolumesView";
 
@@ -26,7 +27,7 @@ function renderView(view: string) {
     case "volumes":
       return <VolumesView />;
     case "networks":
-      return <PlaceholderView title="Networks" />;
+      return <NetworksView />;
     case "compose":
       return <PlaceholderView title="Compose" />;
     case "builds":

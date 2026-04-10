@@ -2,7 +2,15 @@ import { useEffect, useRef, useState } from "react";
 import { Network, useAppStore, useNetworkStore } from "../../store";
 import { NetworkFilter, NetworkSortKey } from "../../store/networkStore";
 import { Dropdown, DropdownCheckItem, DropdownHeader } from "../DropDown";
-import { ArrowDown, ArrowUp } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  Network as NetworkIcon,
+  Plus,
+  RefreshCcw,
+  Table,
+} from "lucide-react";
+import { NetworkRow, ViewToggle } from "../NetworksViewComponents/NetworkRow";
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 
@@ -121,21 +129,23 @@ export default function NetworksView() {
       </div>
 
       {/* Toolbar */}
-      <div className="flex items-center gap-2 px-6 py-3 shrink-0">
+      <div className="flex items-center gap-2 px-6 py-2 shrink-0">
         <button
           className="toolbar-btn-primary"
           onClick={() => setShowCreateModal(true)}
         >
-          ＋ Create network
+          <Plus className="w-4 h-4" /> Create network
         </button>
-        <button className="toolbar-btn">⟳ Refresh</button>
+        <button className="toolbar-btn">
+          <RefreshCcw className="w-4 h-4" /> Refresh
+        </button>
 
         <div
           className="w-px h-5 mx-1"
           style={{ background: "var(--border)" }}
         />
 
-        <div className="flex gap-0.5">
+        <div className="flex gap-1">
           {FILTER_TABS.map((tab) => (
             <button
               key={tab.id}
@@ -216,14 +226,21 @@ export default function NetworksView() {
               active={view === "table"}
               onClick={() => setView("table")}
             >
-              ☰ Table
+              <span className="flex items-center gap-1">
+                <Table className="w-4 h-4" />
+                Table
+              </span>
             </ViewToggle>
+
             <ViewToggle
               active={view === "topology"}
               onClick={() => setView("topology")}
               last
             >
-              ⬡ Topology
+              <span className="flex items-center gap-1">
+                <NetworkIcon className="w-4 h-4" />
+                Topology
+              </span>
             </ViewToggle>
           </div>
         </div>
@@ -301,7 +318,11 @@ export default function NetworksView() {
                             {h.label}
                             {h.key && sortKey === h.key && (
                               <span style={{ color: "var(--accent)" }}>
-                                {sortDir === "asc" ? "↑" : "↓"}
+                                {sortDir === "asc" ? (
+                                  <ArrowUp className="w-3 h-3 inline" />
+                                ) : (
+                                  <ArrowDown className="w-3 h-3 inline" />
+                                )}
                               </span>
                             )}
                           </span>

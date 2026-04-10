@@ -165,10 +165,10 @@ export function VolumeRow({
       >
         <div className="flex items-center gap-1 transition-opacity duration-150">
           <RowBtn title="Inspect" onClick={onSelect}>
-            <HardDrive className="w-3 h-3" />
+            <HardDrive className="w-4 h-4" />
           </RowBtn>
           <RowBtn title="Browse files" onClick={onBrowse}>
-            <FolderOpen className="w-3 h-3" />
+            <FolderOpen className="w-4 h-4" />
           </RowBtn>
           <RowBtn
             title={v.inUse ? "Stop containers first" : "Remove"}
@@ -176,7 +176,7 @@ export function VolumeRow({
             disabled={v.inUse}
             onClick={onRemove}
           >
-            <X className="w-3 h-3" />
+            <X className="w-4 h-4" />
           </RowBtn>
         </div>
       </Cell>

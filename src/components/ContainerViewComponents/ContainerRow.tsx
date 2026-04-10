@@ -154,23 +154,23 @@ export function ContainerRow({
       >
         <div className="flex items-center gap-1 transition-opacity duration-150">
           <RowBtn title="Logs">
-            <FileText className="w-3 h-3" />
+            <FileText className="w-4 h-4" />
           </RowBtn>
           <RowBtn title="Terminal">
-            <Terminal className="w-3 h-3" />
+            <Terminal className="w-4 h-4" />
           </RowBtn>
           <RowBtn
             title={c.status === "running" ? "Stop" : "Start"}
             onClick={onToggle}
           >
             {c.status === "running" ? (
-              <Square className="w-3 h-3" />
+              <Square className="w-4 h-4" />
             ) : (
-              <Play className="w-3 h-3" />
+              <Play className="w-4 h-4" />
             )}
           </RowBtn>
           <RowBtn title="Remove" danger onClick={onRemove}>
-            <Trash2 className="w-3 h-3" />
+            <Trash2 className="w-4 h-4" />
           </RowBtn>
         </div>
       </Cell>
