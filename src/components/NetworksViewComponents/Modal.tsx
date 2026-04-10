@@ -4,6 +4,15 @@ import { driverColor, Flag } from "./NetworkRow";
 import { Modal, ModalField, ModalInput, ModalToggleRow } from "../Modal";
 import { CloseBtn } from "../ImageViewComponents/CloseBtn";
 import { InfoRow, Section } from "../ImageViewComponents/ImageRow";
+import {
+  Box,
+  Link,
+  MinusCircle,
+  Network as NetworkIcon,
+  Plug,
+  Plus,
+  X,
+} from "lucide-react";
 
 function nextIp(subnet: string): string {
   if (subnet === "—") return "—";
@@ -504,7 +513,7 @@ export function DetailPanel({
             className="w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0"
             style={{ background: dc.bg, color: dc.color }}
           >
-            ⬡
+            <NetworkIcon className="w-4 h-4" />
           </div>
           <div>
             <div className="flex items-center gap-1.5">
@@ -544,7 +553,7 @@ export function DetailPanel({
             className="toolbar-btn flex-1 justify-center"
             onClick={onConnect}
           >
-            ⊕ Connect
+            <Link className="w-4 h-4" /> Connect
           </button>
           <button
             className="toolbar-btn px-3"
@@ -561,7 +570,7 @@ export function DetailPanel({
                 : "Remove network"
             }
           >
-            ✕ Remove
+            <X className="w-4 h-4" /> Remove
           </button>
         </div>
 
@@ -645,7 +654,7 @@ export function DetailPanel({
                 >
                   <div className="flex items-center gap-2">
                     <span style={{ color: "var(--green)", fontSize: 12 }}>
-                      ▣
+                      <Box className="w-4 h-4" />
                     </span>
                     <span
                       className="text-[11px] font-mono"
@@ -682,7 +691,7 @@ export function DetailPanel({
                         e.currentTarget.style.color = "var(--text-muted)";
                       }}
                     >
-                      ⊖
+                      <MinusCircle className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -697,7 +706,7 @@ export function DetailPanel({
                 No containers connected
               </p>
               <button
-                className="text-[10px] font-mono px-2.5 py-1 rounded cursor-pointer border transition-all"
+                className="flex gap-1 text-[10px] font-mono px-2.5 py-1 rounded cursor-pointer border transition-all"
                 style={{
                   background: "var(--accent-dim)",
                   borderColor: "rgba(0,212,255,0.2)",
@@ -705,7 +714,7 @@ export function DetailPanel({
                 }}
                 onClick={onConnect}
               >
-                ⊕ Connect a container
+                <Plug className="w-4 h-4" /> Connect a container
               </button>
             </div>
           )}
@@ -1115,7 +1124,7 @@ export function CreateNetworkModal({
           }}
           onClick={handleCreate}
         >
-          ⬡ Create network
+          <Plus className="w-4 h-4" /> Create network
         </button>
       </div>
     </Modal>
