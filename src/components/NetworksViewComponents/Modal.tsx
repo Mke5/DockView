@@ -1,9 +1,38 @@
-// ─── TOPOLOGY VIEW ────────────────────────────────────────────────────────────
-
 import { useState } from "react";
 import { Network, useContainerStore } from "../../store";
 import { driverColor, Flag } from "./NetworkRow";
-import { Modal, ModalField, ModalInput } from "../Modal";
+import { Modal, ModalField, ModalInput, ModalToggleRow } from "../Modal";
+import { CloseBtn } from "../ImageViewComponents/CloseBtn";
+import { InfoRow, Section } from "../ImageViewComponents/ImageRow";
+
+function nextIp(subnet: string): string {
+  if (subnet === "—") return "—";
+  const base = subnet.split("/")[0].split(".");
+  const last = parseInt(base[3]) + Math.floor(Math.random() * 100) + 2;
+  return `${base[0]}.${base[1]}.${base[2]}.${Math.min(last, 254)}`;
+}
+
+function LegendItem({
+  children,
+  color,
+}: {
+  children: React.ReactNode;
+  color: string;
+}) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className="w-2 h-2 rounded-full" style={{ background: color }} />
+      <span
+        className="text-[10px] font-mono"
+        style={{ color: "var(--text-muted)" }}
+      >
+        {children}
+      </span>
+    </div>
+  );
+}
+
+// ─── TOPOLOGY VIEW ────────────────────────────────────────────────────────────
 
 export function TopologyView({
   networks,
@@ -713,5 +742,382 @@ export function DetailPanel({
         )}
       </div>
     </div>
+  );
+}
+
+function IpCell({
+  label,
+  value,
+  right,
+}: {
+  label: string;
+  value: string;
+  right?: boolean;
+}) {
+  return (
+    <div
+      className="flex flex-col gap-0.5 p-2.5"
+      style={{ borderLeft: right ? "1px solid var(--border)" : "none" }}
+    >
+      <span
+        className="text-[9px] font-mono uppercase tracking-wider"
+        style={{ color: "var(--text-muted)" }}
+      >
+        {label}
+      </span>
+      <span
+        className="text-[11px] font-mono"
+        style={{
+          color: value === "—" ? "var(--text-muted)" : "var(--text-secondary)",
+        }}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
+// ─── CREATE NETWORK MODAL ─────────────────────────────────────────────────────
+
+const DRIVER_OPTIONS = ["bridge", "host", "overlay", "macvlan", "none"];
+
+const SCOPE_OPTIONS = ["local", "global", "swarm"];
+
+export function CreateNetworkModal({
+  onClose,
+  onCreate,
+}: {
+  onClose: () => void;
+  onCreate: (n: Network) => void;
+}) {
+  const [name, setName] = useState("");
+  const [driver, setDriver] = useState("bridge");
+  const [scope, setScope] = useState("local");
+  const [subnet, setSubnet] = useState("");
+  const [gateway, setGateway] = useState("");
+  const [ipRange, setIpRange] = useState("");
+  const [internal, setInternal] = useState(false);
+  const [attachable, setAttachable] = useState(true);
+  const [labelKey, setLabelKey] = useState("");
+  const [labelVal, setLabelVal] = useState("");
+  const [labels, setLabels] = useState<Record<string, string>>({});
+  const [error, setError] = useState("");
+
+  function addLabel() {
+    if (!labelKey.trim()) return;
+    setLabels((prev) => ({ ...prev, [labelKey.trim()]: labelVal.trim() }));
+    setLabelKey("");
+    setLabelVal("");
+  }
+
+  function removeLabel(key: string) {
+    setLabels((prev) => {
+      const n = { ...prev };
+      delete n[key];
+      return n;
+    });
+  }
+
+  function handleCreate() {
+    if (!name.trim()) {
+      setError("Network name is required.");
+      return;
+    }
+    if (!/^[a-zA-Z0-9][a-zA-Z0-9_.-]*$/.test(name.trim())) {
+      setError("Name must start with a letter or number.");
+      return;
+    }
+    const id = `net-${name.trim()}-${Date.now()}`;
+    const shortId = id.slice(-8);
+    const effectiveSubnet =
+      subnet.trim() ||
+      (driver === "bridge"
+        ? `172.${Math.floor(Math.random() * 50 + 22)}.0.0/16`
+        : "—");
+    const effectiveGateway =
+      gateway.trim() ||
+      (driver === "bridge"
+        ? effectiveSubnet.replace("/16", "").replace(/\.0$/, ".1")
+        : "—");
+    onCreate({
+      id,
+      shortId,
+      name: name.trim(),
+      driver,
+      scope: scope as "local" | "global" | "swarm",
+      subnet: effectiveSubnet,
+      gateway: effectiveGateway,
+      ipRange: ipRange.trim() || effectiveSubnet,
+      internal,
+      attachable,
+      created: new Date().toISOString().slice(0, 10),
+      containers: [],
+      labels,
+      isDefault: false,
+    });
+    onClose();
+  }
+
+  const cliPreview = [
+    "docker network create",
+    `--driver ${driver}`,
+    subnet && `--subnet ${subnet}`,
+    gateway && `--gateway ${gateway}`,
+    ipRange && `--ip-range ${ipRange}`,
+    internal && "--internal",
+    attachable && "--attachable",
+    ...Object.entries(labels).map(([k, v]) => `--label ${k}=${v}`),
+    name || "<name>",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    <Modal title="Create a network" onClose={onClose} wide>
+      <div className="flex flex-col gap-4">
+        <ModalField
+          label="Network name *"
+          description="Unique name for the network"
+        >
+          <ModalInput
+            value={name}
+            onChange={(v) => {
+              setName(v);
+              setError("");
+            }}
+            placeholder="my_network"
+            mono
+            autoFocus
+            error={!!error}
+          />
+          {error && (
+            <p
+              className="text-[10px] font-mono mt-1"
+              style={{ color: "var(--red)" }}
+            >
+              {error}
+            </p>
+          )}
+        </ModalField>
+
+        <div className="grid grid-cols-2 gap-3">
+          <ModalField label="Driver" description="Network driver">
+            <div className="flex flex-wrap gap-1.5">
+              {DRIVER_OPTIONS.map((d) => (
+                <button
+                  key={d}
+                  className="px-2.5 py-1 rounded text-[10px] font-mono cursor-pointer border transition-all"
+                  style={{
+                    background:
+                      driver === d ? "var(--accent-dim)" : "var(--bg3)",
+                    borderColor:
+                      driver === d ? "rgba(0,212,255,0.3)" : "var(--border)",
+                    color: driver === d ? "var(--accent)" : "var(--text-muted)",
+                  }}
+                  onClick={() => setDriver(d)}
+                >
+                  {d}
+                </button>
+              ))}
+            </div>
+          </ModalField>
+
+          <ModalField label="Scope" description="Network scope">
+            <div className="flex gap-1.5">
+              {SCOPE_OPTIONS.map((s) => (
+                <button
+                  key={s}
+                  className="px-2.5 py-1 rounded text-[10px] font-mono cursor-pointer border transition-all"
+                  style={{
+                    background:
+                      scope === s ? "var(--accent-dim)" : "var(--bg3)",
+                    borderColor:
+                      scope === s ? "rgba(0,212,255,0.3)" : "var(--border)",
+                    color: scope === s ? "var(--accent)" : "var(--text-muted)",
+                  }}
+                  onClick={() => setScope(s)}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </ModalField>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3">
+          <ModalField label="Subnet" description="e.g. 172.20.0.0/16">
+            <ModalInput
+              value={subnet}
+              onChange={setSubnet}
+              placeholder="auto"
+              mono
+            />
+          </ModalField>
+          <ModalField label="Gateway" description="e.g. 172.20.0.1">
+            <ModalInput
+              value={gateway}
+              onChange={setGateway}
+              placeholder="auto"
+              mono
+            />
+          </ModalField>
+          <ModalField label="IP Range" description="e.g. 172.20.0.0/24">
+            <ModalInput
+              value={ipRange}
+              onChange={setIpRange}
+              placeholder="auto"
+              mono
+            />
+          </ModalField>
+        </div>
+
+        {/* Flags */}
+        <div
+          className="grid grid-cols-2 gap-3 p-3 rounded-lg"
+          style={{
+            background: "var(--bg2)",
+            border: "1px solid var(--border)",
+          }}
+        >
+          <ModalToggleRow
+            label="Internal"
+            description="Restrict external access (--internal)"
+            value={internal}
+            onChange={setInternal}
+          />
+          <ModalToggleRow
+            label="Attachable"
+            description="Allow manual container attach (--attachable)"
+            value={attachable}
+            onChange={setAttachable}
+          />
+        </div>
+
+        {/* Labels */}
+        <ModalField
+          label="Labels"
+          description="Key-value metadata for the network"
+        >
+          <div className="flex gap-2 mb-2">
+            <ModalInput
+              value={labelKey}
+              onChange={setLabelKey}
+              placeholder="com.example.key"
+              mono
+              style={{ flex: 1 }}
+            />
+            <span
+              className="self-center text-[10px] font-mono"
+              style={{ color: "var(--text-muted)" }}
+            >
+              =
+            </span>
+            <ModalInput
+              value={labelVal}
+              onChange={setLabelVal}
+              placeholder="value"
+              mono
+              style={{ flex: 1 }}
+            />
+            <button
+              className="px-2.5 py-1.5 rounded text-[10px] font-mono cursor-pointer border transition-all shrink-0"
+              style={{
+                background: "var(--bg3)",
+                borderColor: "var(--border)",
+                color: "var(--text-secondary)",
+              }}
+              onClick={addLabel}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "var(--accent)";
+                e.currentTarget.style.color = "var(--accent)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "var(--border)";
+                e.currentTarget.style.color = "var(--text-secondary)";
+              }}
+            >
+              ＋ Add
+            </button>
+          </div>
+          {Object.keys(labels).length > 0 && (
+            <div className="flex flex-col gap-1">
+              {Object.entries(labels).map(([k, v]) => (
+                <div
+                  key={k}
+                  className="flex items-center justify-between px-2.5 py-1.5 rounded"
+                  style={{
+                    background: "var(--bg2)",
+                    border: "1px solid var(--border)",
+                  }}
+                >
+                  <span
+                    className="text-[10px] font-mono"
+                    style={{ color: "var(--text-secondary)" }}
+                  >
+                    <span style={{ color: "var(--accent)" }}>{k}</span> = {v}
+                  </span>
+                  <button
+                    className="text-[10px] cursor-pointer border-none bg-transparent ml-2"
+                    style={{ color: "var(--text-muted)" }}
+                    onClick={() => removeLabel(k)}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = "var(--red)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = "var(--text-muted)";
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </ModalField>
+
+        {/* CLI preview */}
+        <div
+          className="px-3 py-2.5 rounded"
+          style={{
+            background: "var(--bg0)",
+            border: "1px solid var(--border)",
+          }}
+        >
+          <p
+            className="text-[9px] font-mono uppercase tracking-wider mb-1.5"
+            style={{ color: "var(--text-muted)" }}
+          >
+            Command preview
+          </p>
+          <p
+            className="text-[10px] font-mono leading-relaxed break-all"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            <span style={{ color: "var(--accent)" }}>$ </span>
+            {cliPreview}
+          </p>
+        </div>
+      </div>
+
+      <div
+        className="flex justify-end gap-2 mt-5 pt-4"
+        style={{ borderTop: "1px solid var(--border)" }}
+      >
+        <button className="toolbar-btn px-4" onClick={onClose}>
+          Cancel
+        </button>
+        <button
+          className="px-5 py-2 rounded text-[11px] font-semibold cursor-pointer transition-all"
+          style={{
+            background: "var(--accent)",
+            color: "#000",
+            border: "1px solid var(--accent)",
+          }}
+          onClick={handleCreate}
+        >
+          ⬡ Create network
+        </button>
+      </div>
+    </Modal>
   );
 }

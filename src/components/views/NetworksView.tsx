@@ -11,6 +11,12 @@ import {
   Table,
 } from "lucide-react";
 import { NetworkRow, ViewToggle } from "../NetworksViewComponents/NetworkRow";
+import {
+  ConnectContainerModal,
+  CreateNetworkModal,
+  DetailPanel,
+  TopologyView,
+} from "../NetworksViewComponents/Modal";
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 
