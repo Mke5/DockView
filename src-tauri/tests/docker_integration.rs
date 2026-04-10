@@ -4,9 +4,9 @@
 
 #[cfg(test)]
 mod integration {
-    use dockview_lib::docker::client::DockerClient;
-    use dockview_lib::docker::containers::ContainerOps;
-    use dockview_lib::docker::images::ImageOps;
+    use dock_lib::docker::client::DockerClient;
+    use dock_lib::docker::containers::ContainerOps;
+    use dock_lib::docker::images::ImageOps;
 
     /// Helper — connect to Docker or skip the test.
     async fn docker() -> Option<DockerClient> {
@@ -44,15 +44,16 @@ mod integration {
 
     #[tokio::test]
     #[ignore]
-    async fn pull_alpine_image() {
+    async fn pull_alpine_image() {    use std::sync::atomic::{AtomicUsize, Ordering};    use std::sync::Arc;
         let client = docker().await.expect("Docker not available");
         let ops = ImageOps::new(&client);
-        let mut events = 0usize;
-        ops.pull("alpine", "latest", |_p| {
-            events += 1;
+        let events = Arc::new(AtomicUsize::new(0));
+        let events_clone = Arc::clone(&events);
+        ops.pull("alpine", "latest", move |_p| {
+            events_clone.fetch_add(1, Ordering::SeqCst);
         })
         .await
         .expect("pull failed");
-        assert!(events > 0, "Expected at least one progress event");
-    }
+        let event_count = events.load(Ordering::SeqCst);
+        assert!(event_count > 0, "Expected at least one progress event");}
 }
