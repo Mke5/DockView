@@ -1,4 +1,4 @@
-import { Pause, Play } from "lucide-react";
+import { FileText, Pause, Play, Terminal } from "lucide-react";
 import { ComposeService } from "../../store";
 import { SERVICE_STATUS_CFG, StackBtn } from "./StackCard";
 
@@ -115,12 +115,12 @@ export function ServiceRow({
       >
         {svc.containerId}
       </span>
-      <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="flex items-center gap-0.5 shrink-0 transition-opacity">
         <StackBtn title="Logs" small>
-          ≡
+          <FileText className="w-3 h-3" />
         </StackBtn>
         <StackBtn title="Terminal" small>
-          ›_
+          <Terminal className="w-3 h-3" />
         </StackBtn>
         <StackBtn
           title={svc.status === "running" ? "Stop service" : "Start service"}
@@ -128,9 +128,9 @@ export function ServiceRow({
           onClick={onToggle}
         >
           {svc.status === "running" ? (
-            <Pause className="w-4 h-4" />
+            <Pause className="w-3 h-3" />
           ) : (
-            <Play className="w-4 h-4" />
+            <Play className="w-3 h-3" />
           )}
         </StackBtn>
       </div>

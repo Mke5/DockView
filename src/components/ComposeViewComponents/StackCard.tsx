@@ -1,9 +1,10 @@
 import {
   ChevronRight,
-  Download,
   DownloadCloud,
+  Info,
   Layers,
   Pause,
+  Pencil,
   Play,
   RefreshCcw,
   SquareStop,
@@ -95,7 +96,7 @@ export function StackCard({
 
   return (
     <div
-      className="rounded-xl overflow-hidden transition-all duration-150"
+      className="rounded-xl overflow-y-auto transition-all duration-150"
       style={{
         background: selected ? "var(--accent-dim)" : "var(--bg1)",
         border: `1px solid ${selected ? "rgba(0,212,255,0.25)" : "var(--border)"}`,
@@ -181,11 +182,11 @@ export function StackCard({
 
         {/* Row actions */}
         <div
-          className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="flex items-center gap-1 shrink-0 transition-opacity"
           onClick={(e) => e.stopPropagation()}
         >
           <StackBtn title="Inspect" onClick={onSelect}>
-            ⊙
+            <Info className="w-4 h-4" />
           </StackBtn>
           {stack.status === "running" || stack.status === "partial" ? (
             <StackBtn title="Stop stack" onClick={onStop}>
@@ -202,9 +203,11 @@ export function StackCard({
           <StackBtn title="Pull latest images" onClick={onPull}>
             <DownloadCloud className="w-4 h-4" />
           </StackBtn>
-          <StackBtn title="Edit compose file">✎</StackBtn>
+          <StackBtn title="Edit compose file">
+            <Pencil className="w-4 h-4" />
+          </StackBtn>
           <StackBtn title="Remove stack" danger onClick={onRemove}>
-            ✕
+            <X className="w-4 -4" />
           </StackBtn>
         </div>
       </div>

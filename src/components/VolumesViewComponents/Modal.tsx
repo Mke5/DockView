@@ -356,7 +356,7 @@ export function BrowseModal({
   onClose: () => void;
 }) {
   const [path, setPath] = useState<string[]>([]);
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  // const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   const rootNodes = buildMockFs(volume.name);
 

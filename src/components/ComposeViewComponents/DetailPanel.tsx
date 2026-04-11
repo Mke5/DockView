@@ -10,7 +10,19 @@ import {
 import { generateYaml } from "./generateYaml";
 import { Section } from "../VolumesViewComponents/Modal";
 import { InfoRow } from "../ImageViewComponents/ImageRow";
-import { Download, Pause, Pencil, Play, RotateCw, X } from "lucide-react";
+import {
+  Check,
+  Copy,
+  DownloadCloud,
+  FileText,
+  Layers,
+  Pause,
+  Pencil,
+  Play,
+  RotateCw,
+  Terminal,
+  X,
+} from "lucide-react";
 
 export function DetailPanel({
   stack,
@@ -55,7 +67,7 @@ export function DetailPanel({
             className="w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0"
             style={{ background: `${cfg.color}18`, color: cfg.color }}
           >
-            ⊞
+            <Layers className="w-4 h-4" />
           </div>
           <div>
             <div
@@ -162,8 +174,12 @@ function ServicesTab({
                 </span>
               </div>
               <div className="flex items-center gap-1">
-                <SmallBtn title="Logs">≡</SmallBtn>
-                <SmallBtn title="Terminal">›_</SmallBtn>
+                <SmallBtn title="Logs">
+                  <FileText className="w-3 h-3" />
+                </SmallBtn>
+                <SmallBtn title="Terminal">
+                  <Terminal className="w-3 h-3" />
+                </SmallBtn>
                 <SmallBtn
                   title={
                     svc.status === "running" ? "Stop service" : "Start service"
@@ -171,9 +187,9 @@ function ServicesTab({
                   onClick={() => onServiceToggle(svc)}
                 >
                   {svc.status === "running" ? (
-                    <Pause className="w-4 h-4" />
+                    <Pause className="w-3 h-3" />
                   ) : (
-                    <Play className="w-4 h-4" />
+                    <Play className="w-3 h-3" />
                   )}
                 </SmallBtn>
               </div>
@@ -312,9 +328,19 @@ function ConfigTab({ stack }: { stack: ComposeStack }) {
             }
             onClick={handleCopy}
           >
-            {copied ? "✓ Copied" : "⎘ Copy"}
+            {copied ? (
+              <>
+                <Check className="w-3 h-3" /> Copied
+              </>
+            ) : (
+              <>
+                <Copy className="w-3 h-3" /> Copy
+              </>
+            )}
           </button>
-          <button className="toolbar-btn px-2 py-1 text-[10px]">✎ Edit</button>
+          <button className="toolbar-btn px-2 py-1 text-[10px]">
+            <Pencil className="w-3 h-3" /> Edit
+          </button>
         </div>
       </div>
       <div
@@ -369,7 +395,7 @@ function OverviewTab({
           <RotateCw className="w-4 h-4" /> Restart
         </button>
         <button className="toolbar-btn justify-center" onClick={onPull}>
-          <Download className="w-4 h-4" /> Pull latest
+          <DownloadCloud className="w-4 h-4" /> Pull latest
         </button>
         <button className="toolbar-btn justify-center">
           <Pencil className="w-4 h-4" /> Edit file
