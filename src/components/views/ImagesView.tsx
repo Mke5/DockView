@@ -4,15 +4,15 @@ import { ImageSortKey } from "../../store/imageStore";
 import {
   ArrowDown,
   ArrowUp,
-  Download,
+  DownloadCloud,
   RefreshCw,
   Scissors,
-  Upload,
+  UploadCloud,
 } from "lucide-react";
 import { Dropdown, DropdownCheckItem, DropdownHeader } from "../DropDown";
 import { ImageRow } from "../ImageViewComponents/ImageRow";
 import { DetailPanel } from "../ImageViewComponents/DetailsPanel";
-import { PullModal, PushModal } from "../ImageViewComponents/Modal";
+import { PullModal, PushModal, RunModal } from "../ImageViewComponents/Modal";
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 
@@ -148,10 +148,10 @@ export default function ImagesView() {
           className="toolbar-btn-primary"
           onClick={() => setShowPullModal(true)}
         >
-          <Download className="w-4 h-4 mr-1.5 inline" /> Pull image
+          <DownloadCloud className="w-4 h-4 mr-1.5 inline" /> Pull image
         </button>
         <button className="toolbar-btn" onClick={() => setShowPushModal(true)}>
-          <Upload className="w-4 h-4 mr-1.5 inline" /> Push
+          <UploadCloud className="w-4 h-4 mr-1.5 inline" /> Push
         </button>
         <button className="toolbar-btn">
           <RefreshCw className="w-4 h-4 mr-1.5 inline" /> Refresh
@@ -414,6 +414,10 @@ export default function ImagesView() {
       )}
       {showPushModal && (
         <PushModal onClose={() => setShowPushModal(false)} image={selected} />
+      )}
+
+      {showRunModal && (
+        <RunModal onClose={() => setShowRunModal(null)} image={showRunModal} />
       )}
     </div>
   );

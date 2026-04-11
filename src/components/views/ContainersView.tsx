@@ -1,7 +1,7 @@
 import {
   ArrowDown,
   ArrowUp,
-  Download,
+  DownloadCloud,
   Grid,
   Plus,
   RefreshCw,
@@ -201,7 +201,7 @@ export default function ContainersView() {
           className="toolbar-btn shrink-0"
           onClick={() => setShowPullModal(true)}
         >
-          <Download className="w-4 h-4 mr-1.5 inline" /> Pull image
+          <DownloadCloud className="w-4 h-4 mr-1.5 inline" /> Pull image
         </button>
         <button className="toolbar-btn shrink-0">
           <RefreshCw className="w-4 h-4 mr-1.5 inline" /> Refresh

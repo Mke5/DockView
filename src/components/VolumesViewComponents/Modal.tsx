@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Volume } from "../../store";
 import { Modal, ModalField, ModalInput } from "../Modal";
-import { Database } from "lucide-react";
+import { Database, File, Folder, Plus } from "lucide-react";
 
 const DRIVER_OPTIONS = ["local", "nfs", "tmpfs", "overlay2", "custom"];
 
@@ -249,7 +249,7 @@ export function CreateVolumeModal({
           Cancel
         </button>
         <button
-          className="px-5 py-2 rounded text-[11px] font-semibold cursor-pointer transition-all"
+          className="flex gap-1 items-center px-5 py-2 rounded text-[11px] font-semibold cursor-pointer transition-all"
           style={{
             background: "var(--accent)",
             color: "#000",
@@ -257,7 +257,7 @@ export function CreateVolumeModal({
           }}
           onClick={handleCreate}
         >
-          ◈ Create volume
+          <Plus className="w-4 h-4" /> Create volume
         </button>
       </div>
     </Modal>
@@ -466,7 +466,11 @@ export function BrowseModal({
                     node.type === "dir" ? "var(--accent)" : "var(--text-muted)",
                 }}
               >
-                {node.type === "dir" ? "◈" : "≡"}
+                {node.type === "dir" ? (
+                  <Folder className="w-4 h-4" />
+                ) : (
+                  <File className="w-4 h-4" />
+                )}
               </span>
 
               {/* Name */}

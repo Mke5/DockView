@@ -16,6 +16,12 @@ import {
   RefreshCcw,
 } from "lucide-react";
 import { StackCard } from "../ComposeViewComponents/StackCard";
+import { DetailPanel } from "../ComposeViewComponents/DetailPanel";
+import {
+  NewStackModal,
+  OpenFileModal,
+  PullLatestModal,
+} from "../ComposeViewComponents/Modal";
 
 // config
 

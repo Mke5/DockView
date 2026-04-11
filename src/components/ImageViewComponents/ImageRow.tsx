@@ -1,4 +1,4 @@
-import { Bug, Code, Play, Trash2, Upload } from "lucide-react";
+import { Info, Play, Trash2, UploadCloud } from "lucide-react";
 import { DockerImage } from "../../store";
 import { Cell } from "../Cell";
 import { RowBtn } from "../RowBtn";
@@ -169,13 +169,13 @@ export function ImageRow({
       >
         <div className="flex items-center gap-1 transition-opacity duration-150">
           <RowBtn title="Inspect" onClick={onSelect}>
-            <Code className="w-4 h-4" />
+            <Info className="w-4 h-4" />
           </RowBtn>
           <RowBtn title="Run container" onClick={onRun}>
             <Play className="w-4 h-4" />
           </RowBtn>
           <RowBtn title="Push to registry" onClick={onPush}>
-            <Upload className="w-4 h-4" />
+            <UploadCloud className="w-4 h-4" />
           </RowBtn>
           <RowBtn title="Remove" danger onClick={onRemove}>
             <Trash2 className="w-4 h-4" />

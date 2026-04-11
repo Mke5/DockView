@@ -1,4 +1,4 @@
-import { Play, Upload, X } from "lucide-react";
+import { Box, Info, Play, UploadCloud, X } from "lucide-react";
 import { DockerImage } from "../../store";
 import { CloseBtn } from "./CloseBtn";
 import { SizeBar } from "./Helpers";
@@ -71,13 +71,13 @@ export function DetailPanel({
             }}
             onClick={onRun}
           >
-            <Play className="w-3 h-3" /> Run
+            <Play className="w-4 h-4" /> Run
           </button>
           <button
             className="toolbar-btn flex-1 justify-center"
             onClick={onPush}
           >
-            <Upload className="w-3 h-3" /> Push
+            <UploadCloud className="w-4 h-4" /> Push
           </button>
           <button
             className="toolbar-btn px-2.5"
@@ -103,7 +103,9 @@ export function DetailPanel({
               color: "var(--amber)",
             }}
           >
-            <span className="shrink-0 mt-px">⚠</span>
+            <span className="shrink-0 mt-px">
+              <Info className="w-4 h-4" />
+            </span>
             <span>
               Image is in use by {img.containers.length} container
               {img.containers.length !== 1 ? "s" : ""}. Stop them before
@@ -154,7 +156,9 @@ export function DetailPanel({
                     e.currentTarget.style.color = "var(--text-secondary)";
                   }}
                 >
-                  <span style={{ color: "var(--green)" }}>▣</span>
+                  <span style={{ color: "var(--green)" }}>
+                    <Box className="w-4 h-4" />
+                  </span>
                   {name}
                 </div>
               ))}

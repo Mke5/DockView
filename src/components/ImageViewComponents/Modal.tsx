@@ -1,4 +1,10 @@
-import { Download, Loader2, Play, Search, Upload } from "lucide-react";
+import {
+  DownloadCloud,
+  Loader2,
+  Play,
+  Search,
+  UploadCloud,
+} from "lucide-react";
 import { CloseBtn } from "./CloseBtn";
 import { repoColor } from "./ImageRow";
 import { DockerImage, useContainerStore, useImageStore } from "../../store";
@@ -265,7 +271,7 @@ export function PullModal({
                   className="text-[11px]"
                   style={{ color: "var(--text-muted)" }}
                 >
-                  <Search className="w-3 h-3" />
+                  <Search className="w-4 h-4" />
                 </span>
                 <input
                   type="text"
@@ -436,7 +442,7 @@ export function PullModal({
                 </>
               ) : (
                 <>
-                  <Download className="h-3 w-3" />
+                  <DownloadCloud className="h-4 w-4" />
                   <span>Pull image</span>
                 </>
               )}
@@ -662,7 +668,7 @@ export function PushModal({
                 </>
               ) : (
                 <>
-                  <Upload className="h-3 w-3" />
+                  <UploadCloud className="h-4 w-4" />
                   <span>Push image</span>
                 </>
               )}
@@ -851,7 +857,7 @@ export function RunModal({
           Cancel
         </button>
         <button
-          className="px-5 py-2 rounded text-[11px] font-semibold cursor-pointer transition-all"
+          className="flex gap-1 items-center px-5 py-2 rounded text-[11px] font-semibold cursor-pointer transition-all"
           style={{
             background: "var(--accent)",
             color: "#000",
@@ -859,7 +865,7 @@ export function RunModal({
           }}
           onClick={handleRun}
         >
-          <Play className="w-3 h-3" /> Run container
+          <Play className="w-4 h-4" /> Run container
         </button>
       </div>
     </Modal>

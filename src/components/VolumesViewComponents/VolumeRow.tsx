@@ -1,4 +1,4 @@
-import { FolderOpen, HardDrive, X } from "lucide-react";
+import { FolderOpen, Info, X } from "lucide-react";
 import { Volume } from "../../store";
 import { Cell } from "../Cell";
 import { RowBtn } from "../RowBtn";
@@ -165,7 +165,7 @@ export function VolumeRow({
       >
         <div className="flex items-center gap-1 transition-opacity duration-150">
           <RowBtn title="Inspect" onClick={onSelect}>
-            <HardDrive className="w-4 h-4" />
+            <Info className="w-4 h-4" />
           </RowBtn>
           <RowBtn title="Browse files" onClick={onBrowse}>
             <FolderOpen className="w-4 h-4" />

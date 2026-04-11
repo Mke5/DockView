@@ -1,7 +1,18 @@
+import {
+  ChevronRight,
+  Download,
+  DownloadCloud,
+  Layers,
+  Pause,
+  Play,
+  RefreshCcw,
+  SquareStop,
+  X,
+} from "lucide-react";
 import { ComposeService, ComposeStack, ComposeStackStatus } from "../../store";
-import { StackBtn } from "./Modal";
+import { ServiceRow } from "./ServiceRow";
 
-const STACK_STATUS_CFG: Record<
+export const STACK_STATUS_CFG: Record<
   ComposeStackStatus,
   { bg: string; color: string; dot: string; label: string }
 > = {
@@ -31,15 +42,24 @@ const STACK_STATUS_CFG: Record<
   },
 };
 
-const SERVICE_STATUS_CFG: Record<string, { color: string; icon: string }> = {
-  running: { color: "var(--green)", icon: "▶" },
-  paused: { color: "var(--amber)", icon: "⏸" },
-  stopped: { color: "var(--text-muted)", icon: "■" },
-  exited: { color: "var(--red)", icon: "✕" },
-  restarting: { color: "var(--purple)", icon: "↺" },
+export const SERVICE_STATUS_CFG: Record<
+  string,
+  { color: string; icon: React.ReactNode }
+> = {
+  running: { color: "var(--green)", icon: <Play className="w-4 h-4" /> },
+  paused: { color: "var(--amber)", icon: <Pause className="w-4 h-4" /> },
+  stopped: {
+    color: "var(--text-muted)",
+    icon: <SquareStop className="w-4 h-4" />,
+  },
+  exited: { color: "var(--red)", icon: <X className="w-4 h-4" /> },
+  restarting: {
+    color: "var(--purple)",
+    icon: <RefreshCcw className="w-4 h-4" />,
+  },
 };
 
-function runningRatio(stack: ComposeStack) {
+export function runningRatio(stack: ComposeStack) {
   const total = stack.services.length;
   const running = stack.services.filter((s) => s.status === "running").length;
   return { running, total };
@@ -95,14 +115,14 @@ export function StackCard({
             display: "inline-block",
           }}
         >
-          ▶
+          <ChevronRight className="w-4 h-4" />
         </span>
 
         <div
           className="w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0"
           style={{ background: `${cfg.color}18`, color: cfg.color }}
         >
-          ⊞
+          <Layers className="w-4 h-4" />
         </div>
 
         <div className="flex-1 min-w-0">
@@ -169,18 +189,18 @@ export function StackCard({
           </StackBtn>
           {stack.status === "running" || stack.status === "partial" ? (
             <StackBtn title="Stop stack" onClick={onStop}>
-              ■
+              <Pause className="w-4 h-4" />
             </StackBtn>
           ) : (
             <StackBtn title="Start stack" onClick={onStart}>
-              ▶
+              <Play className="w-4 h-4" />
             </StackBtn>
           )}
           <StackBtn title="Restart stack" onClick={onRestart}>
-            ↺
+            <RefreshCcw className="w-4 h-4" />
           </StackBtn>
           <StackBtn title="Pull latest images" onClick={onPull}>
-            ⬆
+            <DownloadCloud className="w-4 h-4" />
           </StackBtn>
           <StackBtn title="Edit compose file">✎</StackBtn>
           <StackBtn title="Remove stack" danger onClick={onRemove}>
