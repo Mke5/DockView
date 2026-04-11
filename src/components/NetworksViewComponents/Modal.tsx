@@ -6,9 +6,11 @@ import { CloseBtn } from "../ImageViewComponents/CloseBtn";
 import { InfoRow, Section } from "../ImageViewComponents/ImageRow";
 import {
   Box,
+  CircleOff,
   Link,
   MinusCircle,
   Network as NetworkIcon,
+  Play,
   Plug,
   Plus,
   X,
@@ -96,7 +98,7 @@ export function TopologyView({
                         className="w-7 h-7 rounded-lg flex items-center justify-center text-sm"
                         style={{ background: dc.bg, color: dc.color }}
                       >
-                        ⬡
+                        <NetworkIcon className="w-4 h-4" />
                       </div>
                       <span
                         className="text-sm font-semibold font-mono"
@@ -119,7 +121,7 @@ export function TopologyView({
                         {net.subnet}
                       </span>
                       <button
-                        className="text-[10px] font-mono px-2 py-0.5 rounded border cursor-pointer transition-all"
+                        className="flex gap-1 text-[10px] font-mono px-2 py-0.5 rounded border cursor-pointer transition-all"
                         style={{
                           background: "var(--bg3)",
                           borderColor: "var(--border)",
@@ -141,7 +143,7 @@ export function TopologyView({
                           e.currentTarget.style.background = "var(--bg3)";
                         }}
                       >
-                        ⊕ Connect
+                        <Link className="w-3 h-3" /> Connect
                       </button>
                     </div>
                   </div>
@@ -240,7 +242,7 @@ export function TopologyView({
                     className="w-6 h-6 rounded-md flex items-center justify-center text-xs"
                     style={{ background: dc.bg, color: dc.color }}
                   >
-                    ⬡
+                    <NetworkIcon className="w-4 h-4" />
                   </div>
                   <span
                     className="text-[11px] font-mono"
@@ -310,7 +312,7 @@ export function ConnectContainerModal({
             className="w-8 h-8 rounded-lg flex items-center justify-center text-sm shrink-0"
             style={driverColor(network.driver)}
           >
-            ⬡
+            <NetworkIcon className="w-4 h-4" />
           </div>
           <div>
             <p
@@ -341,7 +343,7 @@ export function ConnectContainerModal({
               }}
             >
               <span className="text-lg" style={{ color: "var(--text-muted)" }}>
-                ▣
+                <CircleOff size={16} className="text-muted" />
               </span>
               <p
                 className="text-[11px] font-mono"
@@ -376,7 +378,7 @@ export function ConnectContainerModal({
                       color: "var(--green)",
                     }}
                   >
-                    ▶
+                    <Play className="w-4 h-4" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p
@@ -456,7 +458,7 @@ export function ConnectContainerModal({
           Cancel
         </button>
         <button
-          className="px-5 py-2 rounded text-[11px] font-semibold transition-all"
+          className="flex gap-1 px-5 py-2 rounded text-[11px] font-semibold transition-all"
           style={{
             background:
               !selected || available.length === 0
@@ -473,7 +475,7 @@ export function ConnectContainerModal({
           disabled={!selected || available.length === 0}
           onClick={handleConnect}
         >
-          ⊕ Connect
+          <Link className="w-4 h-4" /> Connect
         </button>
       </div>
     </Modal>
