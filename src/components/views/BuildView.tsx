@@ -10,6 +10,7 @@ import { Dropdown, DropdownCheckItem, DropdownHeader } from "../DropDown";
 import { BuildRow } from "../BuildsViewComponents/BuildsRow";
 import { StatsBar } from "../BuildsViewComponents/StatsBar";
 import { ArrowDown, ArrowUp, Plus, RefreshCcw, X } from "lucide-react";
+import { DetailPanel } from "../BuildsViewComponents/DetailPanel";
 
 function sortBuilds(
   list: BuildRecord[],

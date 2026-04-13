@@ -3,7 +3,7 @@ import {
   Circle,
   Cog,
   Globe,
-  Hand,
+  Hammer,
   Layout,
   Loader,
   Menu,
@@ -59,7 +59,7 @@ const BUILD_STATUS_CFG: Record<
   },
 };
 
-const STEP_STATUS_CFG: Record<
+export const STEP_STATUS_CFG: Record<
   string,
   { color: string; icon: React.ReactNode }
 > = {
@@ -73,8 +73,11 @@ const STEP_STATUS_CFG: Record<
   cached: { color: "var(--purple)", icon: <Zap size={16} /> },
 };
 
-const TRIGGER_CFG: Record<string, { icon: React.ReactNode; label: string }> = {
-  manual: { icon: <Hand size={16} />, label: "Manual" },
+export const TRIGGER_CFG: Record<
+  string,
+  { icon: React.ReactNode; label: string }
+> = {
+  manual: { icon: <Hammer size={16} />, label: "Manual" },
   compose: { icon: <Layout size={16} />, label: "Compose" },
   cli: { icon: <Terminal size={16} />, label: "CLI" },
   api: { icon: <Globe size={16} />, label: "API" },
