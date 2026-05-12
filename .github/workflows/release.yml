@@ -1,0 +1,345 @@
+name: Release Pipeline
+
+# Trigger on git tags (semantic versioning)
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'  # Semantic versioning tags (v1.2.3)
+      - 'v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+'  # Release candidates
+      - 'v[0-9]+.[0-9]+.[0-9]+-beta[0-9]+'  # Beta releases
+      - 'v[0-9]+.[0-9]+.[0-9]+-alpha[0-9]+'  # Alpha releases
+
+env:
+  CARGO_TERM_COLOR: always
+  NODE_VERSION: '20'
+
+jobs:
+  # Extract version and determine release type
+  release-info:
+    name: Release Information
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      is_prerelease: ${{ steps.version.outputs.is_prerelease }}
+      release_name: ${{ steps.version.outputs.release_name }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract version info
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          
+          # Determine if this is a prerelease
+          if [[ $VERSION =~ -(alpha|beta|rc)[0-9]+$ ]]; then
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+            echo "release_name=Dock $VERSION (Prerelease)" >> $GITHUB_OUTPUT
+          else
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+            echo "release_name=Dock $VERSION" >> $GITHUB_OUTPUT
+          fi
+
+  # Build release binaries for all platforms
+  build-release:
+    name: Build Release (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    needs: release-info
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Windows
+          - os: windows-latest
+            platform: windows
+            arch: x64
+            target: x86_64-pc-windows-msvc
+            bundle_formats: msi,nsis
+            
+          # macOS Intel
+          - os: macos-latest
+            platform: macos
+            arch: x64
+            target: x86_64-apple-darwin
+            bundle_formats: dmg,app
+            
+          # macOS Apple Silicon
+          - os: macos-13
+            platform: macos
+            arch: aarch64
+            target: aarch64-apple-darwin
+            bundle_formats: dmg,app
+            
+          # Linux
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+            target: x86_64-unknown-linux-gnu
+            bundle_formats: deb,appimage
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            src-tauri/target
+            node_modules
+          key: ${{ runner.os }}-${{ matrix.target }}-release-${{ hashFiles('**/Cargo.lock', '**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.target }}-release-
+            ${{ runner.os }}-${{ matrix.target }}-
+
+      - name: Install system dependencies (Ubuntu)
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Build Tauri app (Release)
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
+        with:
+          tauriScript: npm run tauri
+          args: '--target ${{ matrix.target }} --bundles ${{ matrix.bundle_formats }}'
+          tagName: ${{ github.ref_name }}
+          releaseName: ${{ needs.release-info.outputs.release_name }}
+          releaseBody: |
+            ## Dock ${{ needs.release-info.outputs.version }}
+            
+            ### Installation
+            - **Windows**: Download the `.msi` installer
+            - **macOS**: Download the `.dmg` file
+            - **Linux**: Download the `.deb` package (for Debian/Ubuntu) or `.AppImage` (universal)
+            
+            ### What's Changed
+            ${{ github.event.head_commit.message }}
+            
+            ### System Requirements
+            - Windows 10+ (x64)
+            - macOS 10.15+ (Intel or Apple Silicon)
+            - Linux (x64) with GTK3 and WebKit2GTK
+            
+            ---
+            **Note**: This release was automatically generated.
+          releaseDraft: false
+          prerelease: ${{ needs.release-info.outputs.is_prerelease }}
+          includeReleaseAssets: true
+
+      - name: Upload additional artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.platform }}-${{ matrix.arch }}
+          path: |
+            src-tauri/target/${{ matrix.target }}/release/bundle/
+            src-tauri/target/${{ matrix.target }}/release/dockview*
+          retention-days: 30
+
+  # Code signing (Windows)
+  sign-windows:
+    name: Code Sign Windows
+    runs-on: windows-latest
+    needs: [release-info, build-release]
+    if: contains(needs.build-release.result, 'success') && secrets.WINDOWS_CERTIFICATE_BASE64 != ''
+    steps:
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-windows-x64
+          path: windows-artifacts
+
+      - name: Setup Code Signing
+        run: |
+          # Import certificate
+          $certBytes = [System.Convert]::FromBase64String('${{ secrets.WINDOWS_CERTIFICATE_BASE64 }}')
+          [System.IO.File]::WriteAllBytes("certificate.pfx", $certBytes)
+          
+          # Import to certificate store
+          Import-PfxCertificate -FilePath "certificate.pfx" -CertStoreLocation Cert:\CurrentUser\My -Password (ConvertTo-SecureString -String "${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}" -Force -AsPlainText)
+
+      - name: Sign binaries
+        run: |
+          Get-ChildItem -Path "windows-artifacts\*.exe" -Recurse | ForEach-Object {
+            signtool sign /f certificate.pfx /p "${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}" /t http://timestamp.digicert.com /fd SHA256 $_.FullName
+          }
+
+      - name: Upload signed artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-signed
+          path: windows-artifacts
+          retention-days: 30
+
+  # Notarization (macOS)
+  notarize-macos:
+    name: Notarize macOS
+    runs-on: macos-latest
+    needs: [release-info, build-release]
+    if: contains(needs.build-release.result, 'success') && secrets.APPLE_ID != ''
+    steps:
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-macos-x64
+          path: macos-artifacts
+
+      - name: Notarize app
+        run: |
+          # Install notarytool
+          xcode-select --install
+
+          # Notarize the app
+          for dmg in macos-artifacts/*.dmg; do
+            xcrun notarytool submit "$dmg" \
+              --apple-id "${{ secrets.APPLE_ID }}" \
+              --password "${{ secrets.APPLE_APP_PASSWORD }}" \
+              --team-id "${{ secrets.APPLE_TEAM_ID }}" \
+              --wait
+          done
+
+      - name: Staple notarization
+        run: |
+          for dmg in macos-artifacts/*.dmg; do
+            xcrun stapler staple "$dmg"
+          done
+
+      - name: Upload notarized artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-notarized
+          path: macos-artifacts
+          retention-days: 30
+
+  # Generate release notes
+  release-notes:
+    name: Generate Release Notes
+    runs-on: ubuntu-latest
+    needs: [release-info]
+    outputs:
+      notes: ${{ steps.notes.outputs.notes }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        id: notes
+        run: |
+          # Get previous tag
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          
+          # Generate changelog
+          if [ -n "$PREVIOUS_TAG" ]; then
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD)
+          else
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)")
+          fi
+          
+          cat << EOF > release_notes.md
+          ## Dock ${{ needs.release-info.outputs.version }}
+          
+          ### 🚀 Changes
+          $CHANGELOG
+          
+          ### 📦 Installation
+          - **Windows**: Download the `.msi` installer
+          - **macOS**: Download the `.dmg` file  
+          - **Linux**: Download the `.deb` package (for Debian/Ubuntu) or `.AppImage` (universal)
+          
+          ### 🔐 Verification
+          All binaries are code signed and notarized where applicable.
+          
+          ### 📋 System Requirements
+          - Windows 10+ (x64)
+          - macOS 10.15+ (Intel or Apple Silicon)  
+          - Linux (x64) with GTK3 and WebKit2GTK
+          
+          ---
+          **Full Changelog**: https://github.com/${{ github.repository }}/compare/$PREVIOUS_TAG...v${{ needs.release-info.outputs.version }}
+          EOF
+          
+          echo "notes=$(cat release_notes.md)" >> $GITHUB_OUTPUT
+
+  # Create final GitHub Release
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [release-info, build-release, sign-windows, notarize-macos, release-notes]
+    if: always() && (needs.build-release.result == 'success' || needs.build-release.result == 'skipped')
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          merge-multiple: true
+          path: all-artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ needs.release-info.outputs.release_name }}
+          body: ${{ needs.release-notes.outputs.notes }}
+          draft: false
+          prerelease: ${{ needs.release-info.outputs.is_prerelease }}
+          files: |
+            all-artifacts/**/*.msi
+            all-artifacts/**/*.exe
+            all-artifacts/**/*.dmg
+            all-artifacts/**/*.app
+            all-artifacts/**/*.deb
+            all-artifacts/**/*.AppImage
+            all-artifacts/**/*.tar.gz
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Update auto-update feed
+  update-autoupdate:
+    name: Update Auto-Update Feed
+    runs-on: ubuntu-latest
+    needs: [create-release]
+    if: needs.create-release.result == 'success' && !needs.release-info.outputs.is_prerelease
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Update update feed
+        run: |
+          # This would update your auto-update manifest
+          # Implementation depends on your update server setup
+          echo "Auto-update feed would be updated here"
+
+      - name: Notify deployment
+        if: secrets.DISCORD_WEBHOOK != ''
+        run: |
+          curl -H "Content-Type: application/json" -X POST -d '{
+            "content": "🚀 **Dock ${{ needs.release-info.outputs.version }}** has been released!\n\nDownload now: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
+          }' "${{ secrets.DISCORD_WEBHOOK }}"

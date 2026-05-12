@@ -5,6 +5,7 @@ import ContainersView from "./views/ContainersView";
 import ImagesView from "./views/ImagesView";
 import NetworksView from "./views/NetworksView";
 import PlaceholderView from "./views/PlaceholderView";
+import RegistryView from "./views/RegistryView";
 import VolumesView from "./views/VolumesView";
 
 export default function MainContent() {
@@ -35,7 +36,7 @@ function renderView(view: string) {
     case "builds":
       return <BuildsView />;
     case "registry":
-      return <PlaceholderView title="Registry" />;
+      return <RegistryView />;
     case "logs":
       return <PlaceholderView title="logs" />;
     case "terminal":

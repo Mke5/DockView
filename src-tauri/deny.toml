@@ -1,0 +1,34 @@
+[graph]
+targets = [
+    { triple = "x86_64-pc-windows-msvc" },
+    { triple = "x86_64-apple-darwin" },
+    { triple = "aarch64-apple-darwin" },
+    { triple = "x86_64-unknown-linux-gnu" },
+]
+
+[advisories]
+vulnerability = "deny"
+unmaintained = "warn"
+yanked = "warn"
+notice = "warn"
+
+[licenses]
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "0BSD",
+]
+copyleft = "deny"
+allow-osi-fsf-free = "either"
+
+[bans]
+multiple-versions = "warn"
+wildcards = "allow"
+deny = []
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
