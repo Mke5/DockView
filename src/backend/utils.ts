@@ -1,14 +1,6 @@
-/**
- * src/backend/utils.ts
- *
- * Shared utilities for the backend bridge layer.
- */
-
-// ─── TAURI DETECTION ─────────────────────────────────────────────────────────
-
 /** Returns true when running inside the Tauri desktop shell. */
 export function isTauri(): boolean {
-  return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+  return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 }
 
 // ─── ERROR HANDLING ───────────────────────────────────────────────────────────
@@ -23,10 +15,10 @@ export interface BackendError {
  * Tauri serialises Rust errors as `{ message: string; code?: string }`.
  */
 export function parseError(err: unknown): BackendError {
-  if (typeof err === "string") return { message: err };
-  if (err && typeof err === "object") {
+  if (typeof err === 'string') return { message: err };
+  if (err && typeof err === 'object') {
     const e = err as Record<string, unknown>;
-    if (typeof e.message === "string")
+    if (typeof e.message === 'string')
       return { message: e.message, code: e.code as string | undefined };
   }
   return { message: String(err) };
@@ -53,7 +45,7 @@ export function bytesToHuman(bytes: number): string {
 export function unixToRelative(unix: number): string {
   const now = Date.now() / 1000;
   const diff = now - unix;
-  if (diff < 60) return "just now";
+  if (diff < 60) return 'just now';
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   return `${Math.floor(diff / 86400)}d ago`;
@@ -75,7 +67,7 @@ export function unixToDate(unix: number): string {
  */
 export function poll(
   intervalMs: number,
-  fn: () => void | Promise<void>,
+  fn: () => void | Promise<void>
 ): () => void {
   fn(); // immediate first call
   const id = setInterval(fn, intervalMs);

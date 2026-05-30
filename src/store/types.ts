@@ -1,17 +1,15 @@
-// stores/types.ts
-
-export type ContainerStatus = "running" | "paused" | "stopped" | "exited";
+export type ContainerStatus = 'running' | 'paused' | 'stopped' | 'exited';
 export type ViewSection =
-  | "containers"
-  | "images"
-  | "volumes"
-  | "networks"
-  | "compose"
-  | "builds"
-  | "registry"
-  | "logs"
-  | "terminal"
-  | "settings";
+  | 'containers'
+  | 'images'
+  | 'volumes'
+  | 'networks'
+  | 'compose'
+  | 'builds'
+  | 'registry'
+  | 'logs'
+  | 'terminal'
+  | 'settings';
 
 export interface Container {
   id: string;
@@ -42,6 +40,7 @@ export interface DockerImage {
 }
 
 export interface Volume {
+  id: string;
   name: string;
   driver: string;
   mountpoint: string;
@@ -50,7 +49,7 @@ export interface Volume {
   inUse: boolean;
   containers: string[];
   created: string;
-  scope: "local" | "global" | "swarm";
+  scope: 'local' | 'global' | 'swarm';
   labels: Record<string, string>;
 }
 
@@ -61,19 +60,20 @@ export interface NetworkContainer {
 
 export interface Network {
   id: string;
-  shortId: string;
+  shortId?: string;
   name: string;
   driver: string;
-  scope: "local" | "global" | "swarm";
-  subnet: string;
-  gateway: string;
-  ipRange: string;
+  scope: 'local' | 'global' | 'swarm';
+  subnet?: string;
+  gateway?: string;
+  ipRange?: string;
   internal: boolean;
-  attachable: boolean;
+  attachable?: boolean;
   created: string;
   containers: NetworkContainer[];
-  labels: Record<string, string>;
+  labels?: Record<string, string>;
   isDefault: boolean;
+  enableIPv6?: boolean;
 }
 
 export interface SystemResources {
@@ -83,14 +83,13 @@ export interface SystemResources {
   disk: number;
 }
 
-// Compose types
 export type ComposeServiceStatus =
-  | "running"
-  | "stopped"
-  | "paused"
-  | "exited"
-  | "restarting";
-export type ComposeStackStatus = "running" | "partial" | "stopped" | "degraded";
+  | 'running'
+  | 'stopped'
+  | 'paused'
+  | 'exited'
+  | 'restarting';
+export type ComposeStackStatus = 'running' | 'partial' | 'stopped' | 'degraded';
 
 export interface ComposeService {
   name: string;
@@ -117,19 +116,18 @@ export interface ComposeStack {
   volumes: string[];
 }
 
-// Build types
 export type BuildStatus =
-  | "success"
-  | "failed"
-  | "building"
-  | "cancelled"
-  | "cached";
-export type BuildTrigger = "manual" | "compose" | "cli" | "api";
+  | 'success'
+  | 'failed'
+  | 'building'
+  | 'cancelled'
+  | 'cached';
+export type BuildTrigger = 'manual' | 'compose' | 'cli' | 'api';
 
 export interface BuildStep {
   id: string;
   name: string;
-  status: "done" | "running" | "error" | "pending" | "cached";
+  status: 'done' | 'running' | 'error' | 'pending' | 'cached';
   duration: string;
   log: string;
 }
@@ -152,16 +150,17 @@ export interface BuildRecord {
   cacheUsed: boolean;
   steps: BuildStep[];
   tags: string[];
+  layers?: number;
   error?: string;
+  logs?: string[];
 }
 
-// Registry types
-export type RegistryType = "dockerhub" | "ghcr" | "ecr" | "gcr" | "custom";
+export type RegistryType = 'dockerhub' | 'ghcr' | 'ecr' | 'gcr' | 'custom';
 export type RegistryStatus =
-  | "connected"
-  | "disconnected"
-  | "error"
-  | "checking";
+  | 'connected'
+  | 'disconnected'
+  | 'error'
+  | 'checking';
 
 export interface RegistryTag {
   name: string;
@@ -174,36 +173,36 @@ export interface RegistryTag {
 export interface RegistryRepo {
   id: string;
   name: string;
-  fullName: string;
+  fullName?: string;
   description: string;
   isPrivate: boolean;
-  stars: number;
-  pulls: string;
+  stars?: number;
+  pulls?: string;
   lastPushed: string;
   tags: RegistryTag[];
 }
 
 export interface RegistryAccount {
   id: string;
-  type: RegistryType;
+  type?: RegistryType;
   name: string;
-  url: string;
-  username: string;
+  url?: string;
+  username?: string;
   status: RegistryStatus;
   repos: RegistryRepo[];
   lastSync: string;
   namespace: string;
+  isDefault?: boolean;
 }
 
-// Logs types
 export type LogLevel =
-  | "info"
-  | "warn"
-  | "error"
-  | "debug"
-  | "stdout"
-  | "stderr";
-export type LogSource = "container" | "compose" | "system";
+  | 'info'
+  | 'warn'
+  | 'error'
+  | 'debug'
+  | 'stdout'
+  | 'stderr';
+export type LogSource = 'container' | 'compose' | 'system';
 
 export interface LogEntry {
   id: string;
@@ -212,7 +211,7 @@ export interface LogEntry {
   source: string;
   sourceId: string;
   message: string;
-  stream: "stdout" | "stderr";
+  stream: 'stdout' | 'stderr';
 }
 
 export interface LogStream {
@@ -224,14 +223,13 @@ export interface LogStream {
   entries: LogEntry[];
 }
 
-export type LogFilter = "all" | "info" | "warn" | "error" | "debug";
+export type LogFilter = 'all' | 'info' | 'warn' | 'error' | 'debug';
 
-// Terminal types
-export type TerminalTarget = "container" | "host" | "compose";
+export type TerminalTarget = 'container' | 'host' | 'compose';
 
 export interface TerminalHistoryLine {
   id: string;
-  type: "input" | "output" | "error" | "system" | "prompt";
+  type: 'input' | 'output' | 'error' | 'system' | 'prompt';
   content: string;
 }
 
@@ -248,20 +246,16 @@ export interface TerminalTab {
   connected: boolean;
 }
 
-// Settings types
 export type SettingsSection =
-  | "general"
-  | "engine"
-  | "resources"
-  | "network"
-  | "docker-hub"
-  | "extensions"
-  | "keybindings"
-  | "about";
-
-export type ThemeOption = "dark" | "darker" | "light" | "system";
-export type UpdateChannel = "stable" | "beta" | "nightly";
-export type LoggingDriver = "json-file" | "local" | "syslog" | "none";
+  | 'general'
+  | 'engine'
+  | 'resources'
+  | 'network'
+  | 'keybindings'
+  | 'about';
+export type ThemeOption = 'dark' | 'darker' | 'light' | 'system';
+export type UpdateChannel = 'stable' | 'beta' | 'nightly';
+export type LoggingDriver = 'json-file' | 'local' | 'syslog' | 'none';
 
 export interface KeyBinding {
   id: string;

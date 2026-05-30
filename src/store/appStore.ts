@@ -1,6 +1,6 @@
 // stores/appStore.ts
-import { create } from "zustand";
-import { ViewSection, SystemResources } from "./types";
+import { create } from 'zustand';
+import { ViewSection, SystemResources } from './types';
 
 interface AppState {
   activeView: ViewSection;
@@ -16,8 +16,8 @@ interface AppState {
 }
 
 export const useAppStore = create<AppState>((set) => ({
-  activeView: "containers",
-  searchQuery: "",
+  activeView: 'containers',
+  searchQuery: '',
   engineRunning: true,
   sidebarCollapsed: false,
   resources: { cpu: 34, memUsed: 3.7, memTotal: 6.4, disk: 12.4 },

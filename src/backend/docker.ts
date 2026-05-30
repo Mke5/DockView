@@ -1,12 +1,4 @@
-/**
- * src/backend/docker.ts
- *
- * Typed wrappers around every `invoke()` call.
- * Import from your views/stores like:
- *   import { listContainers, startContainer } from '../backend/docker';
- */
-
-import { Channel, invoke } from "@tauri-apps/api/core";
+import { Channel, invoke } from '@tauri-apps/api/core';
 
 // ─── SHARED TYPES ─────────────────────────────────────────────────────────────
 export interface OkResponse {
@@ -51,24 +43,24 @@ export interface DiskUsage {
   totalSize: number;
 }
 
-export const dockerPing = () => invoke<boolean>("docker_ping");
-export const dockerReconnect = () => invoke<boolean>("docker_reconnect");
-export const dockerSystemInfo = () => invoke<SystemInfo>("docker_system_info");
-export const dockerDiskUsage = () => invoke<DiskUsage>("docker_disk_usage");
+export const dockerPing = () => invoke<boolean>('docker_ping');
+export const dockerReconnect = () => invoke<boolean>('docker_reconnect');
+export const dockerSystemInfo = () => invoke<SystemInfo>('docker_system_info');
+export const dockerDiskUsage = () => invoke<DiskUsage>('docker_disk_usage');
 
 // ─── CONTAINERS ───────────────────────────────────────────────────────────────
 
 export type ContainerStatus =
-  | "running"
-  | "stopped"
-  | "paused"
-  | "exited"
-  | "restarting"
-  | "dead"
-  | "created"
-  | "removing";
+  | 'running'
+  | 'stopped'
+  | 'paused'
+  | 'exited'
+  | 'restarting'
+  | 'dead'
+  | 'created'
+  | 'removing';
 
-export type RestartPolicy = "no" | "always" | "on-failure" | "unless-stopped";
+export type RestartPolicy = 'no' | 'always' | 'on-failure' | 'unless-stopped';
 
 export interface PortMapping {
   hostPort: string;
@@ -160,35 +152,35 @@ export interface RunContainerOptions {
 export interface LogLine {
   containerId: string;
   containerName: string;
-  stream: "stdout" | "stderr";
+  stream: 'stdout' | 'stderr';
   message: string;
   timestamp: string;
 }
 
 export const listContainers = (all?: boolean) =>
-  invoke<ContainerSummary[]>("list_containers", { all });
+  invoke<ContainerSummary[]>('list_containers', { all });
 export const inspectContainer = (id: string) =>
-  invoke<ContainerInspect>("inspect_container", { id });
+  invoke<ContainerInspect>('inspect_container', { id });
 export const startContainer = (id: string) =>
-  invoke<OkResponse>("start_container", { id });
+  invoke<OkResponse>('start_container', { id });
 export const stopContainer = (id: string, timeout?: number) =>
-  invoke<OkResponse>("stop_container", { id, timeout });
+  invoke<OkResponse>('stop_container', { id, timeout });
 export const restartContainer = (id: string, timeout?: number) =>
-  invoke<OkResponse>("restart_container", { id, timeout });
+  invoke<OkResponse>('restart_container', { id, timeout });
 export const pauseContainer = (id: string) =>
-  invoke<OkResponse>("pause_container", { id });
+  invoke<OkResponse>('pause_container', { id });
 export const unpauseContainer = (id: string) =>
-  invoke<OkResponse>("unpause_container", { id });
+  invoke<OkResponse>('unpause_container', { id });
 export const removeContainer = (id: string, force?: boolean) =>
-  invoke<OkResponse>("remove_container", { id, force });
+  invoke<OkResponse>('remove_container', { id, force });
 export const renameContainer = (id: string, newName: string) =>
-  invoke<OkResponse>("rename_container", { id, newName });
+  invoke<OkResponse>('rename_container', { id, newName });
 export const runContainer = (options: RunContainerOptions) =>
-  invoke<string>("run_container", { options });
+  invoke<string>('run_container', { options });
 export const getContainerStats = (id: string) =>
-  invoke<ContainerStats>("get_container_stats", { id });
+  invoke<ContainerStats>('get_container_stats', { id });
 export const getContainerLogs = (id: string, tail?: number, since?: number) =>
-  invoke<LogLine[]>("get_container_logs", { id, tail, since });
+  invoke<LogLine[]>('get_container_logs', { id, tail, since });
 
 // ─── IMAGES ───────────────────────────────────────────────────────────────────
 
@@ -208,14 +200,14 @@ export interface ImageSummary {
   containers: string[];
 }
 
-export const listImages = () => invoke<ImageSummary[]>("list_images");
+export const listImages = () => invoke<ImageSummary[]>('list_images');
 export const inspectImage = (id: string) =>
-  invoke<ImageSummary>("inspect_image", { id });
+  invoke<ImageSummary>('inspect_image', { id });
 export const pullImage = (image: string, tag?: string) =>
-  invoke<OkResponse>("pull_image", { image, tag });
+  invoke<OkResponse>('pull_image', { image, tag });
 export const removeImage = (id: string, force?: boolean) =>
-  invoke<OkResponse>("remove_image", { id, force });
-export const pruneImages = () => invoke<PruneResult>("prune_images");
+  invoke<OkResponse>('remove_image', { id, force });
+export const pruneImages = () => invoke<PruneResult>('prune_images');
 
 // ─── VOLUMES ──────────────────────────────────────────────────────────────────
 
@@ -233,17 +225,17 @@ export interface VolumeSummary {
   sizeHuman: string;
 }
 
-export const listVolumes = () => invoke<VolumeSummary[]>("list_volumes");
+export const listVolumes = () => invoke<VolumeSummary[]>('list_volumes');
 export const createVolume = (
   name: string,
   driver?: string,
   labels?: Record<string, string>,
-  driverOpts?: Record<string, string>,
+  driverOpts?: Record<string, string>
 ) =>
-  invoke<VolumeSummary>("create_volume", { name, driver, labels, driverOpts });
+  invoke<VolumeSummary>('create_volume', { name, driver, labels, driverOpts });
 export const removeVolume = (name: string, force?: boolean) =>
-  invoke<OkResponse>("remove_volume", { name, force });
-export const pruneVolumes = () => invoke<PruneResult>("prune_volumes");
+  invoke<OkResponse>('remove_volume', { name, force });
+export const pruneVolumes = () => invoke<PruneResult>('prune_volumes');
 
 // ─── NETWORKS ─────────────────────────────────────────────────────────────────
 
@@ -281,26 +273,26 @@ export interface CreateNetworkOptions {
   labels: Record<string, string>;
 }
 
-export const listNetworks = () => invoke<NetworkSummary[]>("list_networks");
+export const listNetworks = () => invoke<NetworkSummary[]>('list_networks');
 export const createNetwork = (options: CreateNetworkOptions) =>
-  invoke<string>("create_network", { options });
+  invoke<string>('create_network', { options });
 export const removeNetwork = (id: string) =>
-  invoke<OkResponse>("remove_network", { id });
+  invoke<OkResponse>('remove_network', { id });
 export const connectContainerToNetwork = (
   networkId: string,
   containerId: string,
-  ip?: string,
+  ip?: string
 ) =>
-  invoke<OkResponse>("connect_container_to_network", {
+  invoke<OkResponse>('connect_container_to_network', {
     networkId,
     containerId,
     ip,
   });
 export const disconnectContainerFromNetwork = (
   networkId: string,
-  containerId: string,
+  containerId: string
 ) =>
-  invoke<OkResponse>("disconnect_container_from_network", {
+  invoke<OkResponse>('disconnect_container_from_network', {
     networkId,
     containerId,
   });
@@ -309,7 +301,7 @@ export const disconnectContainerFromNetwork = (
 export interface LogChunk {
   containerId: string;
   containerName: string;
-  stream: "stdout" | "stderr";
+  stream: 'stdout' | 'stderr';
   message: string;
   timestamp: string;
 }
@@ -339,12 +331,12 @@ export interface PullProgressChunk {
 export async function streamContainerLogs(
   id: string,
   onChunk: (chunk: LogChunk) => void,
-  options?: { tail?: number; follow?: boolean },
+  options?: { tail?: number; follow?: boolean }
 ): Promise<() => void> {
   const channel = new Channel<LogChunk>();
   channel.onmessage = onChunk;
 
-  invoke("stream_container_logs", {
+  invoke('stream_container_logs', {
     id,
     tail: options?.tail,
     follow: options?.follow ?? true,
@@ -368,12 +360,12 @@ export async function streamContainerLogs(
 export async function pullImageStream(
   image: string,
   tag: string,
-  onProgress: (chunk: PullProgressChunk) => void,
+  onProgress: (chunk: PullProgressChunk) => void
 ): Promise<() => void> {
   const channel = new Channel<PullProgressChunk>();
   channel.onmessage = onProgress;
 
-  invoke("pull_image_stream", { image, tag, channel }).catch(console.error);
+  invoke('pull_image_stream', { image, tag, channel }).catch(console.error);
 
   return () => {
     channel.onmessage = () => {};
@@ -401,18 +393,18 @@ export interface DockerEvent {
  * });
  */
 export async function onDockerEvent(
-  handler: (event: DockerEvent) => void,
+  handler: (event: DockerEvent) => void
 ): Promise<() => void> {
-  const { listen } = await import("@tauri-apps/api/event");
-  return listen<DockerEvent>("docker://event", (e) => handler(e.payload));
+  const { listen } = await import('@tauri-apps/api/event');
+  return listen<DockerEvent>('docker://event', (e) => handler(e.payload));
 }
 
 /**
  * Listen for bulk stats updates emitted by the stats collector every ~2s.
  */
 export async function onDockerStats(
-  handler: (stats: ContainerStats[]) => void,
+  handler: (stats: ContainerStats[]) => void
 ): Promise<() => void> {
-  const { listen } = await import("@tauri-apps/api/event");
-  return listen<ContainerStats[]>("docker://stats", (e) => handler(e.payload));
+  const { listen } = await import('@tauri-apps/api/event');
+  return listen<ContainerStats[]>('docker://stats', (e) => handler(e.payload));
 }

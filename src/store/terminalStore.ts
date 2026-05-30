@@ -1,33 +1,31 @@
 // stores/terminalStore.ts
-import { create } from "zustand";
-import { TerminalTab, TerminalHistoryLine } from "./types";
+import { create } from 'zustand';
+import { TerminalTab, TerminalHistoryLine } from './types';
 
 interface TerminalState {
   tabs: TerminalTab[];
   activeTabId: string;
   fontSize: number;
-  addTab: (tab: Omit<TerminalTab, "id" | "history">) => void;
+  addTab: (tab: Omit<TerminalTab, 'id' | 'history'>) => void;
   closeTab: (id: string) => void;
   setActiveTab: (id: string) => void;
-  pushLine: (tabId: string, line: Omit<TerminalHistoryLine, "id">) => void;
+  pushLine: (tabId: string, line: Omit<TerminalHistoryLine, 'id'>) => void;
   clearTab: (id: string) => void;
   setFontSize: (size: number) => void;
   setCwd: (tabId: string, cwd: string) => void;
 }
 
 function makeHistory(
-  lines: Omit<TerminalHistoryLine, "id">[],
+  lines: Omit<TerminalHistoryLine, 'id'>[]
 ): TerminalHistoryLine[] {
   return lines.map((l, i) => ({ ...l, id: `h${i}` }));
 }
 
-const MOCK_TABS: TerminalTab[] = [
-  // ... copy from original (including makeHistory calls)
-];
+const MOCK_TABS: TerminalTab[] = [];
 
 export const useTerminalStore = create<TerminalState>((set, get) => ({
   tabs: MOCK_TABS,
-  activeTabId: "term-host",
+  activeTabId: 'term-host',
   fontSize: 12,
   addTab: (tab) =>
     set((state) => {
@@ -40,13 +38,13 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
             id,
             history: [
               {
-                id: "h0",
-                type: "system",
+                id: 'h0',
+                type: 'system',
                 content: `Connected to ${tab.targetName} [${tab.shell}]`,
               },
               {
-                id: "h1",
-                type: "prompt",
+                id: 'h1',
+                type: 'prompt',
                 content: `${tab.user}@${tab.targetName}:${tab.cwd}$ `,
               },
             ],
@@ -60,7 +58,7 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
       const tabs = state.tabs.filter((t) => t.id !== id);
       const activeTabId =
         state.activeTabId === id
-          ? (tabs[tabs.length - 1]?.id ?? "")
+          ? (tabs[tabs.length - 1]?.id ?? '')
           : state.activeTabId;
       return { tabs, activeTabId };
     }),
@@ -73,7 +71,7 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
               ...t,
               history: [...t.history, { ...line, id: `h${t.history.length}` }],
             }
-          : t,
+          : t
       ),
     })),
   clearTab: (id) =>

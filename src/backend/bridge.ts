@@ -1,15 +1,3 @@
-/**
- * src/backend/bridge.ts
- *
- * Bridges the real Docker backend to the existing Zustand stores.
- *
- * Call `initDockerBridge()` once from App.tsx.  It will:
- *   1. Check if Docker is reachable
- *   2. Do an initial load of all resource types into each store
- *   3. Subscribe to live events so stores stay up-to-date automatically
- *   4. Start a polling loop for stats (CPU / memory)
- */
-
 import {
   Container,
   ContainerStatus,
@@ -21,7 +9,7 @@ import {
   useNetworkStore,
   useVolumeStore,
   Volume,
-} from "../store";
+} from '../store';
 import {
   ContainerStats,
   ContainerSummary,
@@ -36,7 +24,7 @@ import {
   onDockerEvent,
   onDockerStats,
   VolumeSummary,
-} from "./docker";
+} from './docker';
 import {
   bytesToHuman,
   errorMessage,
@@ -44,7 +32,7 @@ import {
   poll,
   unixToDate,
   unixToRelative,
-} from "./utils";
+} from './utils';
 
 // ─── TYPE CONVERTERS ─────────────────────────────────────────────────────────
 
@@ -57,24 +45,24 @@ function toStoreContainer(c: ContainerSummary): Container {
     status: mapStatus(c.status),
     ports: c.ports.map((p) => `${p.hostPort}:${p.containerPort}`),
     cpu: Math.round(c.cpuPercent * 10) / 10,
-    memory: c.memoryHuman !== "—" ? c.memoryHuman : bytesToHuman(c.memoryUsage),
+    memory: c.memoryHuman !== '—' ? c.memoryHuman : bytesToHuman(c.memoryUsage),
     uptime: c.uptime || unixToRelative(c.created),
     created: unixToDate(c.created),
   };
 }
 
-function mapStatus(s: ContainerSummary["status"]): ContainerStatus {
+function mapStatus(s: ContainerSummary['status']): ContainerStatus {
   switch (s) {
-    case "running":
-      return "running";
-    case "paused":
-      return "paused";
-    case "exited":
-      return "exited";
-    case "restarting":
-      return "running"; // treat as running for UI purposes
+    case 'running':
+      return 'running';
+    case 'paused':
+      return 'paused';
+    case 'exited':
+      return 'exited';
+    case 'restarting':
+      return 'running'; // treat as running for UI purposes
     default:
-      return "stopped";
+      return 'stopped';
   }
 }
 
@@ -88,8 +76,8 @@ function toStoreImage(i: ImageSummary): DockerImage {
     sizeBytes: i.size,
     created: unixToDate(i.created),
     inUse: i.inUse,
-    architecture: i.architecture || "amd64",
-    os: i.os || "linux",
+    architecture: i.architecture || 'amd64',
+    os: i.os || 'linux',
     digest: i.digest,
     containers: i.containers,
   };
@@ -97,6 +85,7 @@ function toStoreImage(i: ImageSummary): DockerImage {
 
 function toStoreVolume(v: VolumeSummary): Volume {
   return {
+    id: 'vol-' + v.name,
     name: v.name,
     driver: v.driver,
     mountpoint: v.mountpoint,
@@ -105,7 +94,7 @@ function toStoreVolume(v: VolumeSummary): Volume {
     inUse: v.inUse,
     containers: v.containers,
     created: v.created.slice(0, 10),
-    scope: v.scope as "local" | "global" | "swarm",
+    scope: v.scope as 'local' | 'global' | 'swarm',
     labels: v.labels,
   };
 }
@@ -116,7 +105,7 @@ function toStoreNetwork(n: NetworkSummary): Network {
     shortId: n.shortId,
     name: n.name,
     driver: n.driver,
-    scope: n.scope as "local" | "global" | "swarm",
+    scope: n.scope as 'local' | 'global' | 'swarm',
     subnet: n.subnet,
     gateway: n.gateway,
     ipRange: n.ipRange,
@@ -137,7 +126,7 @@ async function loadContainers() {
     const containers = raw.map(toStoreContainer);
     useContainerStore.getState().setContainers(containers);
   } catch (e) {
-    console.warn("[bridge] loadContainers failed:", errorMessage(e));
+    console.warn('[bridge] loadContainers failed:', errorMessage(e));
   }
 }
 
@@ -147,7 +136,7 @@ async function loadImages() {
     const images = raw.map(toStoreImage);
     useImageStore.getState().setImages(images);
   } catch (e) {
-    console.warn("[bridge] loadImages failed:", errorMessage(e));
+    console.warn('[bridge] loadImages failed:', errorMessage(e));
   }
 }
 
@@ -157,7 +146,7 @@ async function loadVolumes() {
     const volumes = raw.map(toStoreVolume);
     useVolumeStore.getState().setVolumes(volumes);
   } catch (e) {
-    console.warn("[bridge] loadVolumes failed:", errorMessage(e));
+    console.warn('[bridge] loadVolumes failed:', errorMessage(e));
   }
 }
 
@@ -167,7 +156,7 @@ async function loadNetworks() {
     const networks = raw.map(toStoreNetwork);
     useNetworkStore.getState().setNetworks(networks);
   } catch (e) {
-    console.warn("[bridge] loadNetworks failed:", errorMessage(e));
+    console.warn('[bridge] loadNetworks failed:', errorMessage(e));
   }
 }
 
@@ -186,30 +175,30 @@ function handleDockerEvent(event: DockerEvent) {
   const { eventType, action } = event;
 
   // Container lifecycle events — reload containers + images
-  if (eventType === "container") {
+  if (eventType === 'container') {
     switch (action) {
-      case "start":
-      case "die":
-      case "stop":
-      case "kill":
-      case "pause":
-      case "unpause":
-      case "restart":
-      case "rename":
-      case "create":
-      case "destroy":
+      case 'start':
+      case 'die':
+      case 'stop':
+      case 'kill':
+      case 'pause':
+      case 'unpause':
+      case 'restart':
+      case 'rename':
+      case 'create':
+      case 'destroy':
         loadContainers();
         break;
     }
   }
 
   // Image events
-  if (eventType === "image") {
+  if (eventType === 'image') {
     switch (action) {
-      case "pull":
-      case "delete":
-      case "tag":
-      case "untag":
+      case 'pull':
+      case 'delete':
+      case 'tag':
+      case 'untag':
         loadImages();
         loadContainers(); // inUse flags need refresh too
         break;
@@ -217,12 +206,12 @@ function handleDockerEvent(event: DockerEvent) {
   }
 
   // Volume events
-  if (eventType === "volume") {
+  if (eventType === 'volume') {
     loadVolumes();
   }
 
   // Network events
-  if (eventType === "network") {
+  if (eventType === 'network') {
     loadNetworks();
   }
 }
@@ -243,8 +232,8 @@ function handleStats(stats: ContainerStats[]) {
       // Direct patch via setContainers for CPU/mem without touching status
       containerStore.setContainers(
         containerStore.containers.map((c) =>
-          c.id === s.id ? { ...c, cpu: newCpu, memory: newMem } : c,
-        ),
+          c.id === s.id ? { ...c, cpu: newCpu, memory: newMem } : c
+        )
       );
     }
   });
@@ -269,7 +258,7 @@ export async function initDockerBridge(): Promise<void> {
 
   // Only wire up real Docker when running inside Tauri, for development
   if (!isTauri()) {
-    console.info("[bridge] Not running in Tauri — using mock store data");
+    console.info('[bridge] Not running in Tauri — using mock store data');
     return;
   }
 
@@ -277,7 +266,7 @@ export async function initDockerBridge(): Promise<void> {
   useAppStore.getState().setEngineRunning(connected);
 
   if (!connected) {
-    console.warn("[bridge] Docker daemon unreachable — retrying in 5s");
+    console.warn('[bridge] Docker daemon unreachable — retrying in 5s');
     setTimeout(() => {
       _initialised = false;
       initDockerBridge();
@@ -285,14 +274,14 @@ export async function initDockerBridge(): Promise<void> {
     return;
   }
 
-  console.info("[bridge] Docker connected — loading data");
+  console.info('[bridge] Docker connected — loading data');
 
   // Initial data load
   await loadAll();
 
   // Subscribe to live Docker events from the backend service
   const unlistenEvent = await onDockerEvent(handleDockerEvent).catch(
-    () => () => {},
+    () => () => {}
   );
   _cleanupFns.push(unlistenEvent);
 
@@ -304,7 +293,7 @@ export async function initDockerBridge(): Promise<void> {
   const stopPoll = poll(30_000, loadAll);
   _cleanupFns.push(stopPoll);
 
-  console.info("[bridge] Bridge active");
+  console.info('[bridge] Bridge active');
 }
 
 /** Tear down all listeners and polling loops. */

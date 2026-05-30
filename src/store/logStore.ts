@@ -1,6 +1,6 @@
 // stores/logStore.ts
-import { create } from "zustand";
-import { LogStream, LogFilter, LogLevel, LogEntry } from "./types";
+import { create } from 'zustand';
+import { LogStream, LogFilter, LogLevel, LogEntry } from './types';
 
 interface LogState {
   streams: LogStream[];
@@ -26,7 +26,7 @@ interface LogState {
 function makeEntries(
   sourceId: string,
   source: string,
-  lines: { t: string; l: LogLevel; m: string; s?: "stdout" | "stderr" }[],
+  lines: { t: string; l: LogLevel; m: string; s?: 'stdout' | 'stderr' }[]
 ): LogEntry[] {
   return lines.map((line, i) => ({
     id: `${sourceId}-${i}`,
@@ -35,7 +35,7 @@ function makeEntries(
     source,
     sourceId,
     message: line.m,
-    stream: line.s ?? "stdout",
+    stream: line.s ?? 'stdout',
   }));
 }
 
@@ -45,9 +45,9 @@ const MOCK_STREAMS: LogStream[] = [
 
 export const useLogStore = create<LogState>((set) => ({
   streams: MOCK_STREAMS,
-  activeStreamIds: ["log-nginx", "log-postgres", "log-redis"],
-  filter: "all",
-  searchQuery: "",
+  activeStreamIds: ['log-nginx', 'log-postgres', 'log-redis'],
+  filter: 'all',
+  searchQuery: '',
   follow: true,
   wrapLines: false,
   showTimestamps: true,
@@ -68,7 +68,7 @@ export const useLogStore = create<LogState>((set) => ({
   clearStream: (id) =>
     set((state) => ({
       streams: state.streams.map((s) =>
-        s.id === id ? { ...s, entries: [] } : s,
+        s.id === id ? { ...s, entries: [] } : s
       ),
     })),
 }));

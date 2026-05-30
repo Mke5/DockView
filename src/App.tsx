@@ -1,29 +1,68 @@
-import { useEffect } from "react";
-import { destroyDockerBridge, initDockerBridge } from "./backend/bridge";
-import Titlebar from "./components/Titlebar";
-import StatusBar from "./components/Statusbar";
-import Sidebar from "./components/Sidebar";
-import MainContent from "./components/MainContent";
+import React, { useEffect } from 'react';
 
-function App() {
+import Titlebar from './components/layout/Titlebar';
+import Sidebar from './components/layout/Sidebar';
+import StatusBar from './components/layout/StatusBar';
+import ContainersView from './components/views/ContainersView';
+import ImagesView from './components/views/ImagesView';
+import ComposeView from './components/views/ComposeView';
+import RegistryView from './components/views/RegistryView';
+import SettingsView from './components/views/SettingsView';
+import {
+  VolumesView,
+  NetworksView,
+  BuildsView,
+  LogsView,
+  TerminalView,
+} from './components/views/OtherViews';
+import { useAppStore } from './store';
+import { isTauri } from './backend/utils';
+import { initDockerBridge } from './backend/bridge';
+
+export default function App() {
+  const { activeView, setEngineRunning } = useAppStore();
+
   useEffect(() => {
-    initDockerBridge();
-    return () => destroyDockerBridge();
+    if (!isTauri()) return;
+    initDockerBridge()
+      .then(() => setEngineRunning(true))
+      .catch(() => setEngineRunning(false));
   }, []);
 
   return (
     <div
-      className="flex flex-col h-screen overflow-hidden"
-      style={{ background: "var(--bg0)" }}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100vh',
+        overflow: 'hidden',
+      }}
     >
       <Titlebar />
-      <div className="flex flex-1 overflow-hidden">
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         <Sidebar />
-        <MainContent />
+        <main
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            background: 'var(--bg1)',
+          }}
+        >
+          {activeView === 'containers' && <ContainersView />}
+          {activeView === 'images' && <ImagesView />}
+          {activeView === 'volumes' && <VolumesView />}
+          {activeView === 'networks' && <NetworksView />}
+          {activeView === 'compose' && <ComposeView />}
+          {activeView === 'builds' && <BuildsView />}
+          {activeView === 'registry' && <RegistryView />}
+          {activeView === 'logs' && <LogsView />}
+          {activeView === 'terminal' && <TerminalView />}
+          {activeView === 'settings' && <SettingsView />}
+        </main>
       </div>
       <StatusBar />
     </div>
   );
 }
-
-export default App;

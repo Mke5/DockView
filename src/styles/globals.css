@@ -1,174 +1,998 @@
-@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap");
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+@import 'tailwindcss';
 @reference "tailwindcss";
 
 @layer base {
-    :root {
-        --bg0: #0d0f12;
-        --bg1: #13161b;
-        --bg2: #1a1e25;
-        --bg3: #21262f;
-        --bg4: #2a3040;
-        --border: rgba(255, 255, 255, 0.07);
-        --border-lit: rgba(255, 255, 255, 0.13);
-        --text-primary: #e8ecf0;
-        --text-secondary: #7a8696;
-        --text-muted: #4a5568;
-        --accent: #00d4ff;
-        --accent-dim: rgba(0, 212, 255, 0.12);
-        --accent-glow: rgba(0, 212, 255, 0.25);
-        --green: #00e676;
-        --green-dim: rgba(0, 230, 118, 0.12);
-        --red: #ff5252;
-        --red-dim: rgba(255, 82, 82, 0.12);
-        --amber: #ffab40;
-        --amber-dim: rgba(255, 171, 64, 0.12);
-        --purple: #b388ff;
-        --purple-dim: rgba(179, 136, 255, 0.12);
-        --sidebar-w: 220px;
-        --topbar-h: 40px;
-    }
+  :root {
+    /* Backgrounds */
+    --bg0: #0e0e10;
+    --bg1: #141416;
+    --bg2: #1c1c1f;
+    --bg3: #242428;
+    --bg4: #2e2e34;
+    --bg5: #38383f;
 
-    * {
-        box-sizing: border-box;
-    }
+    /* Borders */
+    --border: rgba(255, 255, 255, 0.07);
+    --border-lit: rgba(255, 255, 255, 0.13);
 
-    html,
-    body,
-    #root {
-        height: 100%;
-        overflow: hidden;
-    }
+    --text-primary: #e8ecf0;
+    --text-secondary: #7a8696;
+    --text-muted: #4a5568;
+    --accent: #00d4ff;
+    --accent-dim: rgba(0, 212, 255, 0.12);
+    --accent-glow: rgba(0, 212, 255, 0.25);
+    --green: #00e676;
+    --green-dim: rgba(0, 230, 118, 0.12);
+    --red: #ff5252;
+    --red-dim: rgba(255, 82, 82, 0.12);
+    --amber: #ffab40;
+    --amber-dim: rgba(255, 171, 64, 0.12);
+    --purple: #b388ff;
+    --purple-dim: rgba(179, 136, 255, 0.12);
+    --sidebar-w: 220px;
+    --topbar-h: 40px;
+  }
 
-    body {
-        font-family: "DM Sans", sans-serif;
-        background-color: var(--bg0);
-        color: var(--text-primary);
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-    }
+  * {
+    box-sizing: border-box;
+  }
 
-    /* Custom scrollbar */
-    ::-webkit-scrollbar {
-        width: 4px;
-        height: 4px;
-    }
-    ::-webkit-scrollbar-track {
-        background: transparent;
-    }
-    ::-webkit-scrollbar-thumb {
-        background: var(--bg4);
-        border-radius: 2px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-        background: var(--text-muted);
-    }
+  html,
+  body,
+  #root {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background-color: var(--bg0);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--bg4);
+    border-radius: 2px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+  }
 }
 
 @layer components {
-    .font-mono {
-        font-family: "JetBrains Mono", monospace;
-    }
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
 
-    /* Status badge variants */
-    .badge-running {
-        @apply inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide;
-        background: var(--green-dim);
-        color: var(--green);
-    }
-    .badge-stopped {
-        @apply inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide;
-        background: var(--bg4);
-        color: var(--text-muted);
-    }
-    .badge-paused {
-        @apply inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide;
-        background: var(--amber-dim);
-        color: var(--amber);
-    }
-    .badge-exited {
-        @apply inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide;
-        background: var(--red-dim);
-        color: var(--red);
-    }
+  /* Status badge variants */
+  .badge-running {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide;
+    background: var(--green-dim);
+    color: var(--green);
+  }
+  .badge-stopped {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide;
+    background: var(--bg4);
+    color: var(--text-muted);
+  }
+  .badge-paused {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide;
+    background: var(--amber-dim);
+    color: var(--amber);
+  }
+  .badge-exited {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide;
+    background: var(--red-dim);
+    color: var(--red);
+  }
 
-    /* Port tag */
-    .port-tag {
-        @apply inline-block px-1.5 py-0.5 rounded text-[10px] font-mono font-medium;
-        background: var(--purple-dim);
-        color: var(--purple);
-    }
+  /* Port tag */
+  .port-tag {
+    @apply inline-block px-1.5 py-0.5 rounded text-[10px] font-mono font-medium;
+    background: var(--purple-dim);
+    color: var(--purple);
+  }
 
-    /* Nav item */
-    .nav-item {
-        @apply flex items-center gap-2.5 px-2.5 py-1.5 rounded cursor-pointer transition-all duration-100 text-sm font-medium;
-        color: var(--text-secondary);
-        border: 1px solid transparent;
-    }
-    .nav-item:hover {
-        background: var(--bg3);
-        color: var(--text-primary);
-    }
-    .nav-item.active {
-        background: var(--accent-dim);
-        border-color: rgba(0, 212, 255, 0.2);
-        color: var(--accent);
-    }
+  /* Nav item */
+  .nav-item {
+    @apply flex items-center gap-2.5 px-2.5 py-1.5 rounded cursor-pointer transition-all duration-100 text-sm font-medium;
+    color: var(--text-secondary);
+    border: 1px solid transparent;
+  }
+  .nav-item:hover {
+    background: var(--bg3);
+    color: var(--text-primary);
+  }
+  .nav-item.active {
+    background: var(--accent-dim);
+    border-color: rgba(0, 212, 255, 0.2);
+    color: var(--accent);
+  }
 
-    /* Toolbar button */
-    .toolbar-btn {
-        @apply flex items-center gap-1.5 px-3 py-1.5 rounded text-[11px] font-medium cursor-pointer transition-all duration-150;
-        background: var(--bg2);
-        border: 1px solid var(--border);
-        color: var(--text-secondary);
-    }
-    .toolbar-btn:hover {
-        background: var(--bg3);
-        border-color: var(--border-lit);
-        color: var(--text-primary);
-    }
-    .toolbar-btn-primary {
-        @apply flex items-center gap-1.5 px-3 py-1.5 rounded text-[11px] font-semibold cursor-pointer transition-all duration-150;
-        background: var(--accent);
-        border: 1px solid var(--accent);
-        color: #000;
-    }
-    .toolbar-btn-primary:hover {
-        background: #33ddff;
-    }
+  /* Toolbar button */
+  .toolbar-btn {
+    @apply flex items-center gap-1.5 px-3 py-1.5 rounded text-[11px] font-medium cursor-pointer transition-all duration-150;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+  }
+  .toolbar-btn:hover {
+    background: var(--bg3);
+    border-color: var(--border-lit);
+    color: var(--text-primary);
+  }
+  .toolbar-btn-primary {
+    @apply flex items-center gap-1.5 px-3 py-1.5 rounded text-[11px] font-semibold cursor-pointer transition-all duration-150;
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    color: #000;
+  }
+  .toolbar-btn-primary:hover {
+    background: #33ddff;
+  }
 
-    /* Filter tab */
-    .filter-tab {
-        @apply px-2.5 py-1 rounded text-[11px] cursor-pointer transition-all duration-100 font-mono;
-        color: var(--text-muted);
-        border: 1px solid transparent;
-    }
-    .filter-tab:hover {
-        color: var(--text-secondary);
-        background: var(--bg3);
-    }
-    .filter-tab.active {
-        color: var(--accent);
-        background: var(--accent-dim);
-        border-color: rgba(0, 212, 255, 0.2);
-    }
+  /* Filter tab */
+  .filter-tab {
+    @apply px-2.5 py-1 rounded text-[11px] cursor-pointer transition-all duration-100 font-mono;
+    color: var(--text-muted);
+    border: 1px solid transparent;
+  }
+  .filter-tab:hover {
+    color: var(--text-secondary);
+    background: var(--bg3);
+  }
+  .filter-tab.active {
+    color: var(--accent);
+    background: var(--accent-dim);
+    border-color: rgba(0, 212, 255, 0.2);
+  }
 
-    /* Pulse animation for running status */
-    .pulse-green {
-        animation: pulseGreen 1.5s ease-in-out infinite;
-    }
+  /* Pulse animation for running status */
+  .pulse-green {
+    animation: pulseGreen 1.5s ease-in-out infinite;
+  }
 
-    @keyframes pulseGreen {
-        0%,
-        100% {
-            opacity: 1;
-        }
-        50% {
-            opacity: 0.4;
-        }
+  @keyframes pulseGreen {
+    0%,
+    100% {
+      opacity: 1;
     }
+    50% {
+      opacity: 0.4;
+    }
+  }
 
-    .pulse-engine {
-        animation: pulseGreen 2s ease-in-out infinite;
+  .pulse-engine {
+    animation: pulseGreen 2s ease-in-out infinite;
+  }
+}
+
+/* new styles */
+
+@layer base {
+  :root {
+    /* Backgrounds — warm-tinted dark, not cold blue-black */
+    --bg0: #0e0e10;
+    --bg1: #141416;
+    --bg2: #1c1c1f;
+    --bg3: #242428;
+    --bg4: #2e2e34;
+    --bg5: #38383f;
+
+    /* Borders */
+    --border: rgba(255, 255, 255, 0.06);
+    --border-md: rgba(255, 255, 255, 0.1);
+    --border-hi: rgba(255, 255, 255, 0.16);
+
+    /* Text */
+    --text-0: #f2f2f4;
+    --text-1: #a8a8b3;
+    --text-2: #5c5c6e;
+
+    /* Accent — electric blue, not cyan */
+    --blue: #4d9eff;
+    --blue-dim: rgba(77, 158, 255, 0.1);
+    --blue-glow: rgba(77, 158, 255, 0.2);
+
+    /* Status */
+    --green: #3dd68c;
+    --green-dim: rgba(61, 214, 140, 0.1);
+    --red: #f25f5c;
+    --red-dim: rgba(242, 95, 92, 0.1);
+    --amber: #f5a623;
+    --amber-dim: rgba(245, 166, 35, 0.1);
+    --purple: #a78bfa;
+    --purple-dim: rgba(167, 139, 250, 0.1);
+
+    /* Layout */
+    --sidebar-w: 210px;
+    --topbar-h: 38px;
+    --statusbar-h: 24px;
+    --handle-w: 4px;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    overflow: hidden;
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg0);
+    color: var(--text-0);
+    -webkit-font-smoothing: antialiased;
+    font-size: 13px;
+  }
+
+  ::-webkit-scrollbar {
+    width: 3px;
+    height: 3px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--bg5);
+    border-radius: 2px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--text-2);
+  }
+
+  input,
+  textarea,
+  select {
+    font-family: inherit;
+    font-size: inherit;
+  }
+
+  button {
+    cursor: pointer;
+  }
+}
+
+@layer components {
+  /* Mono font */
+  .mono {
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* ─── Layout primitives ──────────────────────── */
+
+  /* Resize handle */
+  .resize-handle {
+    width: var(--handle-w);
+    background: var(--border);
+    cursor: col-resize;
+    position: relative;
+    flex-shrink: 0;
+    transition: background 0.15s;
+    user-select: none;
+  }
+  .resize-handle:hover,
+  .resize-handle.dragging {
+    background: var(--blue);
+  }
+  .resize-handle::after {
+    content: '';
+    position: absolute;
+    inset: 0 -4px;
+  }
+
+  /* Horizontal resize handle */
+  .resize-handle-h {
+    height: var(--handle-w);
+    background: var(--border);
+    cursor: row-resize;
+    position: relative;
+    flex-shrink: 0;
+    transition: background 0.15s;
+    user-select: none;
+  }
+  .resize-handle-h:hover,
+  .resize-handle-h.dragging {
+    background: var(--blue);
+  }
+  .resize-handle-h::after {
+    content: '';
+    position: absolute;
+    inset: -4px 0;
+  }
+
+  /* ─── Navigation ─────────────────────────────── */
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    border-radius: 5px;
+    font-size: 12.5px;
+    font-weight: 400;
+    color: var(--text-1);
+    cursor: pointer;
+    transition:
+      background 0.1s,
+      color 0.1s;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+    user-select: none;
+  }
+  .nav-item:hover {
+    background: var(--bg3);
+    color: var(--text-0);
+  }
+  .nav-item.active {
+    background: var(--bg3);
+    color: var(--text-0);
+    font-weight: 500;
+  }
+  .nav-item.active .nav-dot {
+    background: var(--blue);
+  }
+  .nav-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: transparent;
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+
+  /* ─── Toolbar buttons ─────────────────────────── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid var(--border-md);
+    background: var(--bg3);
+    color: var(--text-1);
+    transition:
+      background 0.1s,
+      color 0.1s,
+      border-color 0.1s;
+    white-space: nowrap;
+    flex-shrink: 0;
+    line-height: 1;
+    height: 28px;
+  }
+  .btn:hover {
+    background: var(--bg4);
+    color: var(--text-0);
+    border-color: var(--border-hi);
+  }
+  .btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    background: var(--blue);
+    color: #fff;
+    border-color: var(--blue);
+    font-weight: 500;
+  }
+  .btn-primary:hover {
+    background: #6aadff;
+    border-color: #6aadff;
+  }
+
+  .btn-danger {
+    color: var(--red);
+    border-color: var(--red-dim);
+    background: var(--red-dim);
+  }
+  .btn-danger:hover {
+    background: var(--red);
+    color: #fff;
+    border-color: var(--red);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--text-2);
+    padding: 4px 6px;
+    height: 26px;
+  }
+  .btn-ghost:hover {
+    background: var(--bg3);
+    color: var(--text-0);
+  }
+
+  .btn-icon {
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 4px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-2);
+  }
+  .btn-icon:hover {
+    background: var(--bg3);
+    color: var(--text-0);
+    border-color: var(--border);
+  }
+
+  /* ─── Filter tabs ─────────────────────────────── */
+  .filter-tab {
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 11.5px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--text-2);
+    border: 1px solid transparent;
+    background: transparent;
+    transition: all 0.1s;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+  }
+  .filter-tab:hover {
+    color: var(--text-1);
+    background: var(--bg3);
+  }
+  .filter-tab.active {
+    color: var(--blue);
+    background: var(--blue-dim);
+    border-color: rgba(77, 158, 255, 0.2);
+  }
+
+  /* ─── Table ───────────────────────────────────── */
+  .tbl-head th {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-2);
+    padding: 6px 12px;
+    text-align: left;
+    background: var(--bg0);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .tbl-head th.sortable {
+    cursor: pointer;
+  }
+  .tbl-head th.sortable:hover {
+    color: var(--text-1);
+  }
+  .tbl-head th.sorted {
+    color: var(--blue);
+  }
+
+  .tbl-row {
+    background: var(--bg1);
+    border-bottom: 1px solid var(--border);
+    transition: background 0.08s;
+    cursor: pointer;
+  }
+  .tbl-row:hover {
+    background: var(--bg2);
+  }
+  .tbl-row.selected {
+    background: var(--blue-dim);
+  }
+  .tbl-row td {
+    padding: 7px 12px;
+    font-size: 12px;
+    color: var(--text-1);
+    vertical-align: middle;
+  }
+  .tbl-row td:first-child {
+    color: var(--text-0);
+  }
+
+  /* ─── Status badges ──────────────────────────── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 7px;
+    border-radius: 3px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .badge-running {
+    background: var(--green-dim);
+    color: var(--green);
+  }
+  .badge-stopped {
+    background: var(--bg4);
+    color: var(--text-2);
+  }
+  .badge-paused {
+    background: var(--amber-dim);
+    color: var(--amber);
+  }
+  .badge-exited {
+    background: var(--red-dim);
+    color: var(--red);
+  }
+  .badge-building {
+    background: var(--blue-dim);
+    color: var(--blue);
+  }
+  .badge-success {
+    background: var(--green-dim);
+    color: var(--green);
+  }
+  .badge-failed {
+    background: var(--red-dim);
+    color: var(--red);
+  }
+  .badge-cached {
+    background: var(--purple-dim);
+    color: var(--purple);
+  }
+  .badge-connected {
+    background: var(--green-dim);
+    color: var(--green);
+  }
+  .badge-disconnected {
+    background: var(--bg4);
+    color: var(--text-2);
+  }
+  .badge-error {
+    background: var(--red-dim);
+    color: var(--red);
+  }
+  .badge-partial {
+    background: var(--amber-dim);
+    color: var(--amber);
+  }
+  .badge-degraded {
+    background: var(--red-dim);
+    color: var(--red);
+  }
+  .badge-info {
+    background: var(--blue-dim);
+    color: var(--blue);
+  }
+
+  .badge-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .badge-dot.pulse {
+    animation: badge-pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes badge-pulse {
+    0%,
+    100% {
+      opacity: 1;
     }
+    50% {
+      opacity: 0.35;
+    }
+  }
+
+  /* Port tag */
+  .port-tag {
+    display: inline-flex;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    background: var(--purple-dim);
+    color: var(--purple);
+    border: 1px solid rgba(167, 139, 250, 0.15);
+  }
+
+  /* ─── Section header ─────────────────────────── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px 10px;
+    flex-shrink: 0;
+  }
+  .section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-0);
+  }
+  .section-sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    color: var(--text-2);
+    margin-top: 1px;
+  }
+
+  /* ─── Toolbar row ────────────────────────────── */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    min-height: 42px;
+  }
+  .toolbar-sep {
+    width: 1px;
+    height: 18px;
+    background: var(--border-md);
+    flex-shrink: 0;
+  }
+
+  /* ─── Detail panel ───────────────────────────── */
+  .detail-panel {
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid var(--border);
+    background: var(--bg1);
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .detail-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .detail-kv {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2px 12px;
+    font-size: 11.5px;
+  }
+  .detail-k {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    color: var(--text-2);
+    white-space: nowrap;
+  }
+  .detail-v {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-1);
+    word-break: break-all;
+  }
+
+  /* ─── Modal ──────────────────────────────────── */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(6px);
+  }
+  .modal-box {
+    background: var(--bg2);
+    border: 1px solid var(--border-hi);
+    border-radius: 8px;
+    box-shadow: 0 32px 80px rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    max-height: 88vh;
+    overflow: hidden;
+  }
+  .modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .modal-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text-0);
+  }
+  .modal-body {
+    padding: 18px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .modal-foot {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 18px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  /* ─── Form fields ─────────────────────────────── */
+  .field-label {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--text-1);
+    margin-bottom: 5px;
+    display: block;
+  }
+  .field-hint {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-2);
+    margin-top: 2px;
+  }
+  .input {
+    width: 100%;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border-md);
+    background: var(--bg3);
+    color: var(--text-0);
+    font-size: 12.5px;
+    outline: none;
+    transition:
+      border-color 0.15s,
+      box-shadow 0.15s;
+  }
+  .input:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 2px var(--blue-dim);
+  }
+  .input.error {
+    border-color: var(--red);
+  }
+  .input.mono {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+  }
+
+  .textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border-md);
+    background: var(--bg3);
+    color: var(--text-0);
+    font-size: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    outline: none;
+    resize: vertical;
+    transition: border-color 0.15s;
+    line-height: 1.5;
+  }
+  .textarea:focus {
+    border-color: var(--blue);
+  }
+
+  .select {
+    width: 100%;
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border-md);
+    background: var(--bg3);
+    color: var(--text-0);
+    font-size: 12.5px;
+    outline: none;
+    cursor: pointer;
+  }
+  .select:focus {
+    border-color: var(--blue);
+  }
+
+  /* Toggle switch */
+  .toggle-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    cursor: pointer;
+    user-select: none;
+  }
+  .toggle-wrap:hover {
+    border-color: var(--border-md);
+  }
+  .toggle {
+    width: 34px;
+    height: 18px;
+    border-radius: 9px;
+    background: var(--bg4);
+    position: relative;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .toggle.on {
+    background: var(--blue);
+  }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 7px;
+    background: #fff;
+    transition: left 0.2s;
+  }
+  .toggle.on::after {
+    left: 18px;
+  }
+
+  /* ─── Progress bar ───────────────────────────── */
+  .progress-track {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--bg4);
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--blue);
+    transition: width 0.2s ease;
+  }
+
+  /* ─── Resource bar (sidebar) ─────────────────── */
+  .res-bar-track {
+    height: 3px;
+    border-radius: 2px;
+    background: var(--bg4);
+    overflow: hidden;
+  }
+
+  /* ─── Empty state ─────────────────────────────── */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    height: 100%;
+    padding: 40px;
+    color: var(--text-2);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    text-align: center;
+  }
+
+  /* ─── Card ────────────────────────────────────── */
+  .card {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg2);
+    overflow: hidden;
+  }
+  .card-head {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-0);
+  }
+  .card-body {
+    padding: 14px 16px;
+  }
+
+  /* ─── Dropdown ────────────────────────────────── */
+  .dropdown {
+    position: absolute;
+    z-index: 50;
+    top: calc(100% + 4px);
+    min-width: 180px;
+    background: var(--bg3);
+    border: 1px solid var(--border-hi);
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    padding: 4px;
+    overflow: hidden;
+  }
+  .dropdown.right {
+    right: 0;
+  }
+  .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--text-1);
+    cursor: pointer;
+    transition: background 0.08s;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+  }
+  .dropdown-item:hover {
+    background: var(--bg4);
+    color: var(--text-0);
+  }
+  .dropdown-item.active {
+    color: var(--blue);
+  }
+  .dropdown-header {
+    padding: 4px 10px 3px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-2);
+  }
+
+  /* ─── Tag chip ────────────────────────────────── */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    background: var(--bg4);
+    color: var(--text-1);
+    border: 1px solid var(--border);
+  }
+
+  /* ─── Compose YAML editor ────────────────────── */
+  .yaml-editor {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    line-height: 1.6;
+    background: var(--bg0);
+    color: #b4d8fe;
+    border: 1px solid var(--border-md);
+    border-radius: 4px;
+    padding: 12px;
+    resize: none;
+    outline: none;
+    width: 100%;
+  }
+  .yaml-editor:focus {
+    border-color: var(--blue);
+  }
+
+  /* ─── Spin animation ─────────────────────────── */
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  .spin {
+    animation: spin 0.8s linear infinite;
+  }
 }
