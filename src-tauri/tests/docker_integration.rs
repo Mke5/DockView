@@ -44,7 +44,9 @@ mod integration {
 
     #[tokio::test]
     #[ignore]
-    async fn pull_alpine_image() {    use std::sync::atomic::{AtomicUsize, Ordering};    use std::sync::Arc;
+    async fn pull_alpine_image() {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        use std::sync::Arc;
         let client = docker().await.expect("Docker not available");
         let ops = ImageOps::new(&client);
         let events = Arc::new(AtomicUsize::new(0));
@@ -55,5 +57,6 @@ mod integration {
         .await
         .expect("pull failed");
         let event_count = events.load(Ordering::SeqCst);
-        assert!(event_count > 0, "Expected at least one progress event");}
+        assert!(event_count > 0, "Expected at least one progress event");
+    }
 }

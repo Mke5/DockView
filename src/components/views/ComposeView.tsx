@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import {
   ChevronDown,
   ChevronRight,
@@ -1004,16 +1004,20 @@ function OpenFileModal({
 
   async function handleBrowse() {
     if (isTauri()) {
+      console.log('isTauri:', isTauri());
       try {
         const { open } = await import('@tauri-apps/plugin-dialog');
         const sel = await open({
           filters: [{ name: 'Compose files', extensions: ['yml', 'yaml'] }],
         });
+        console.log('selected:', sel);
         if (sel && typeof sel === 'string') {
           setPath(sel);
           setError('');
         }
-      } catch {}
+      } catch (err) {
+        console.error('Browse failed:', err);
+      }
     }
   }
 

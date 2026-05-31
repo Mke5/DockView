@@ -301,14 +301,14 @@ function ResourceBar({
         <span
           className="mono"
           style={{
-            fontSize: 9,
+            fontSize: 10,
             color: 'var(--text-2)',
             letterSpacing: '0.06em',
           }}
         >
           {label}
         </span>
-        <span className="mono" style={{ fontSize: 9, color: 'var(--text-2)' }}>
+        <span className="mono" style={{ fontSize: 10, color: 'var(--text-2)' }}>
           {unit}
         </span>
       </div>

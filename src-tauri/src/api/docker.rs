@@ -393,3 +393,121 @@ pub async fn disconnect_container_from_network(
     map_err(ops.disconnect(&network_id, &container_id).await)?;
     Ok(OkResponse::ok())
 }
+
+// ─── COMPOSE ─────────────────────────────────────────────────────────────────
+
+#[tauri::command]
+pub async fn compose_up(
+    project_dir: String,
+) -> CmdResult<OkResponse> {
+    use std::process::Command;
+    let output = Command::new("docker")
+        .args(["compose", "-f", &format!("{}/docker-compose.yml", project_dir), "up", "-d"])
+        .output()
+        .map_err(|e| CommandError::from(e))?;
+    if output.status.success() {
+        Ok(OkResponse { ok: true, message: Some("Stack started".into()) })
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+        Err(stderr.into())
+    }
+}
+
+#[tauri::command]
+pub async fn compose_down(
+    project_dir: String,
+) -> CmdResult<OkResponse> {
+    use std::process::Command;
+    let output = Command::new("docker")
+        .args(["compose", "-f", &format!("{}/docker-compose.yml", project_dir), "down"])
+        .output()
+        .map_err(|e| CommandError::new(format!("Failed to run compose down: {}", e)))?;
+    if output.status.success() {
+        Ok(OkResponse { ok: true, message: Some("Stack stopped".into()) })
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+        Err(stderr.into())
+    }
+}
+
+// ─── BUILD ────────────────────────────────────────────────────────────────────
+
+#[tauri::command]
+pub async fn image_build(
+    tag: String,
+    dockerfile: String,
+    context: String,
+) -> CmdResult<OkResponse> {
+    use std::process::Command;
+    let output = Command::new("docker")
+        .args(["build", "-t", &tag, "-f", &dockerfile, &context])
+        .output()
+        .map_err(|e| CommandError::new(format!("Failed to build image: {}", e)))?;
+    if output.status.success() {
+        Ok(OkResponse { ok: true, message: Some(format!("Built {}", tag)) })
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+        Err(stderr.into())
+    }
+}
+
+// ─── PUSH ─────────────────────────────────────────────────────────────────────
+
+#[tauri::command]
+pub async fn image_push(
+    image: String,
+    destination: String,
+) -> CmdResult<OkResponse> {
+    use std::process::Command;
+    // Tag if different
+    if image != destination {
+        let tag_output = Command::new("docker")
+            .args(["tag", &image, &destination])
+            .output()
+            .map_err(|e| CommandError::new(format!("Failed to tag image: {}", e)))?;
+        if !tag_output.status.success() {
+            let stderr = String::from_utf8_lossy(&tag_output.stderr).to_string();
+            return Err(stderr.into());
+        }
+    }
+    let output = Command::new("docker")
+        .args(["push", &destination])
+        .output()
+        .map_err(|e| CommandError::new(format!("Failed to push image: {}", e)))?;
+    if output.status.success() {
+        Ok(OkResponse { ok: true, message: Some(format!("Pushed {}", destination)) })
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+        Err(stderr.into())
+    }
+}
+
+// ─── REGISTRY LOGIN ───────────────────────────────────────────────────────────
+
+#[tauri::command]
+pub async fn registry_login(
+    registry: String,
+    username: String,
+    password: String,
+) -> CmdResult<OkResponse> {
+    use std::process::{Command, Stdio};
+    use std::io::Write;
+    let mut child = Command::new("docker")
+        .args(["login", &registry, "-u", &username, "--password-stdin"])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|e| CommandError::new(format!("Failed to spawn docker login: {}", e)))?;
+    if let Some(stdin) = child.stdin.as_mut() {
+        let _ = stdin.write_all(password.as_bytes());
+    }
+    let output = child.wait_with_output()
+        .map_err(|e| CommandError::new(format!("docker login failed: {}", e)))?;
+    if output.status.success() {
+        Ok(OkResponse { ok: true, message: Some(format!("Logged in to {}", registry)) })
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+        Err(CommandError::new(stderr))
+    }
+}

@@ -1,5 +1,3 @@
-/// Unit tests that don't require a Docker daemon.
-
 #[cfg(test)]
 mod tests {
     // ─── CLIENT HELPERS ───────────────────────────────────────────────────────

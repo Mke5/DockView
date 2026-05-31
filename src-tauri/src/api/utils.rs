@@ -30,6 +30,24 @@ impl From<anyhow::Error> for CommandError {
     }
 }
 
+impl From<String> for CommandError {
+    fn from(s: String) -> Self {
+        Self::new(s)
+    }
+}
+
+impl From<&str> for CommandError {
+    fn from(s: &str) -> Self {
+        Self::new(s)
+    }
+}
+
+impl From<std::io::Error> for CommandError {
+    fn from(e: std::io::Error) -> Self {
+        Self::new(e.to_string())
+    }
+}
+
 impl std::fmt::Display for CommandError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.message)

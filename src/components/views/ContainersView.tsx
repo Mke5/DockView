@@ -12,6 +12,7 @@ import {
   Square,
   Terminal,
   Trash2,
+  X,
 } from 'lucide-react';
 import {
   Container,
@@ -418,16 +419,18 @@ export default function ContainersView() {
                     style={{ width: col.w }}
                     onClick={() => col.key && setSort(col.key)}
                   >
-                    {col.label}
-                    {col.key && sortKey === col.key && (
-                      <span style={{ marginLeft: 4 }}>
-                        {sortDir === 'asc' ? (
-                          <ArrowUp size={9} />
-                        ) : (
-                          <ArrowDown size={9} />
-                        )}
-                      </span>
-                    )}
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      {col.label}
+                      {col.key && sortKey === col.key && (
+                        <span style={{ display: 'inline-flex', marginLeft: 4 }}>
+                          {sortDir === 'asc' ? (
+                            <ArrowUp size={9} />
+                          ) : (
+                            <ArrowDown size={9} />
+                          )}
+                        </span>
+                      )}
+                    </div>
                   </th>
                 ))}
               </tr>
@@ -742,7 +745,7 @@ export default function ContainersView() {
                   className="btn-icon"
                   onClick={() => selectContainer(null)}
                 >
-                  <Square size={13} />
+                  <X size={13} />
                 </button>
               </div>
               <div style={{ flex: 1, overflowY: 'auto', padding: 14 }}>
