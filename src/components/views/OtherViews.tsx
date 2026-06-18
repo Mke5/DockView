@@ -4,7 +4,6 @@ import {
   Share2,
   Hammer,
   FileText,
-  Terminal as TerminalIcon,
   Trash2,
   Plus,
   RefreshCw,
@@ -1418,89 +1417,4 @@ export function LogsView() {
   );
 }
 
-// ─── Terminal (placeholder) ───────────────────────────────────────────────────
 
-export function TerminalView() {
-  const [input, setInput] = useState('');
-  const [history, setHistory] = useState([
-    'Docker terminal ready. Type a command to execute in a running container.',
-    "$ docker ps --format '{{.Names}}'",
-    'nginx-proxy',
-    'postgres-db',
-    'redis-cache',
-  ]);
-
-  function handleKey(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key !== 'Enter' || !input.trim()) return;
-    setHistory((h) => [...h, '$ ' + input.trim(), 'Executing…']);
-    setInput('');
-  }
-
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        flex: 1,
-        overflow: 'hidden',
-      }}
-    >
-      <ViewHeader
-        title="Terminal"
-        subtitle="Execute commands inside containers"
-      />
-      <div
-        style={{
-          flex: 1,
-          overflow: 'auto',
-          background: 'var(--bg0)',
-          padding: '12px 16px',
-          fontFamily: 'IBM Plex Mono, monospace',
-          fontSize: 12,
-        }}
-      >
-        {history.map((line, i) => (
-          <div
-            key={i}
-            style={{
-              color: line.startsWith('$') ? 'var(--blue)' : 'var(--text-1)',
-              lineHeight: 1.7,
-            }}
-          >
-            {line}
-          </div>
-        ))}
-      </div>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          padding: '8px 14px',
-          borderTop: '1px solid var(--border)',
-          background: 'var(--bg1)',
-        }}
-      >
-        <span className="mono" style={{ color: 'var(--blue)', fontSize: 13 }}>
-          $
-        </span>
-        <input
-          className="mono"
-          style={{
-            flex: 1,
-            background: 'transparent',
-            border: 'none',
-            outline: 'none',
-            fontSize: 12.5,
-            color: 'var(--text-0)',
-          }}
-          placeholder="Enter command…"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKey}
-          autoFocus
-        />
-      </div>
-    </div>
-  );
-}

@@ -13,8 +13,8 @@ import {
   NetworksView,
   BuildsView,
   LogsView,
-  TerminalView,
 } from './components/views/OtherViews';
+import TerminalView from './components/views/TerminalView';
 import { useAppStore } from './store';
 import { isTauri } from './backend/utils';
 import { initDockerBridge } from './backend/bridge';
