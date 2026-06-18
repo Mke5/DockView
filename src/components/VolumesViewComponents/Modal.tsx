@@ -49,6 +49,7 @@ export function CreateVolumeModal({
       return;
     }
     onCreate({
+      id: `vol-${Date.now()}`,
       name: name.trim(),
       driver,
       mountpoint: `/var/lib/docker/volumes/${name.trim()}/_data`,
@@ -371,7 +372,7 @@ export function BrowseModal({
   const currentPath = "/" + path.join("/");
 
   return (
-    <Modal title={`Browse: ${volume.name}`} onClose={onClose} wide>
+    <Modal title={`Browse: ${volume.name}`} onClose={onClose}>
       <div className="flex flex-col gap-3">
         {/* Path breadcrumb */}
         <div

@@ -390,6 +390,8 @@ function CreateVolumeModal({
         created: new Date().toISOString().slice(0, 10),
         inUse: false,
         containers: [],
+        scope: 'local',
+        labels: {},
       });
       onClose();
     } catch (e: any) {

@@ -1,8 +1,6 @@
 import React from "react";
 
 export function Cell({
-  first,
-  last,
   style,
   children,
 }: {
