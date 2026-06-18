@@ -408,3 +408,56 @@ export async function onDockerStats(
   const { listen } = await import('@tauri-apps/api/event');
   return listen<ContainerStats[]>('docker://stats', (e) => handler(e.payload));
 }
+
+// ─── EXEC / TERMINAL ──────────────────────────────────────────────────────────
+
+export interface ExecOutputChunk {
+  sessionId: string;
+  stream: 'stdout' | 'stderr';
+  data: string;
+}
+
+/**
+ * Start an interactive exec session inside a container.
+ * Returns the session ID.
+ * Output is streamed via the `exec://output` event — listen with
+ * `onExecOutput`.
+ */
+export async function execSessionStart(
+  containerId: string,
+  shell: string = '/bin/sh'
+): Promise<string> {
+  return invoke<string>('exec_session_start', { containerId, shell });
+}
+
+/** Write data to the stdin of an exec session. */
+export async function execSessionWrite(
+  sessionId: string,
+  data: string
+): Promise<void> {
+  return invoke('exec_session_write', { sessionId, data });
+}
+
+/** Resize the terminal inside the exec session. */
+export async function execSessionResize(
+  sessionId: string,
+  cols: number,
+  rows: number
+): Promise<void> {
+  return invoke('exec_session_resize', { sessionId, cols, rows });
+}
+
+/** Stop and clean up an exec session. */
+export async function execSessionStop(
+  sessionId: string
+): Promise<void> {
+  return invoke('exec_session_stop', { sessionId });
+}
+
+/** Listen for exec output events. Returns an unlisten function. */
+export async function onExecOutput(
+  handler: (chunk: ExecOutputChunk) => void
+): Promise<() => void> {
+  const { listen } = await import('@tauri-apps/api/event');
+  return listen<ExecOutputChunk>('exec://output', (e) => handler(e.payload));
+}
