@@ -1,9 +1,10 @@
 use anyhow::{Context, Result};
 use bollard::{
     container::{
-        Config, CreateContainerOptions, InspectContainerOptions, ListContainersOptions, LogOutput,
-        LogsOptions, RemoveContainerOptions, RenameContainerOptions, RestartContainerOptions,
-        StartContainerOptions, StatsOptions, StopContainerOptions,
+        Config, CreateContainerOptions, InspectContainerOptions, KillContainerOptions,
+        ListContainersOptions, LogOutput, LogsOptions, RemoveContainerOptions,
+        RenameContainerOptions, RestartContainerOptions, StartContainerOptions, StatsOptions,
+        StopContainerOptions,
     },
     models::{HostConfig, PortBinding, RestartPolicy as BollardRestartPolicy},
 };
@@ -269,6 +270,15 @@ impl<'a> ContainerOps<'a> {
             .unpause_container(id)
             .await
             .context("Failed to unpause container")
+    }
+
+    /// SIGKILL a container immediately.
+    pub async fn kill(&self, id: &str, signal: &str) -> Result<()> {
+        let docker = self.client.get().await?;
+        docker
+            .kill_container(id, Some(KillContainerOptions { signal }))
+            .await
+            .context("Failed to kill container")
     }
 
     pub async fn remove(&self, id: &str, force: bool) -> Result<()> {

@@ -48,6 +48,7 @@ pub fn run() {
             api::docker::unpause_container,
             api::docker::remove_container,
             api::docker::rename_container,
+            api::docker::kill_container,
             api::docker::run_container,
             api::docker::get_container_stats,
             api::docker::get_container_logs,

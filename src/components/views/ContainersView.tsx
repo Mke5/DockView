@@ -42,6 +42,7 @@ import {
   restartContainer,
   pauseContainer,
   unpauseContainer,
+  killContainer,
   removeContainer,
   runContainer,
   pullImageStream,
@@ -233,6 +234,18 @@ export default function ContainersView() {
         delete n[c.id];
         return n;
       });
+    }
+  }
+
+  async function handleKill(c: Container) {
+    if (!confirm(`Kill container "${c.name}"? This will send SIGKILL.`)) return;
+    if (isTauri()) {
+      try {
+        await killContainer(c.id);
+        updateContainerStatus(c.id, 'stopped');
+      } catch (e) {
+        console.error(e);
+      }
     }
   }
 
@@ -676,6 +689,18 @@ export default function ContainersView() {
                                 )}
                               </button>
                             )}
+                            {c.status === 'running' && (
+                              <button
+                                className="btn-icon"
+                                title="Kill"
+                                style={
+                                  { color: 'var(--red)' } as React.CSSProperties
+                                }
+                                onClick={() => handleKill(c)}
+                              >
+                                <X size={13} />
+                              </button>
+                            )}
                             <button
                               className="btn-icon"
                               title="Remove"
@@ -820,6 +845,15 @@ export default function ContainersView() {
                       onClick={() => handlePause(selected)}
                     >
                       <Pause size={13} /> Pause
+                    </button>
+                  )}
+                  {selected.status === 'running' && (
+                    <button
+                      className="btn btn-danger"
+                      style={{ justifyContent: 'center' }}
+                      onClick={() => handleKill(selected)}
+                    >
+                      <X size={13} /> Kill
                     </button>
                   )}
                   <button

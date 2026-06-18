@@ -171,6 +171,8 @@ export const pauseContainer = (id: string) =>
   invoke<OkResponse>('pause_container', { id });
 export const unpauseContainer = (id: string) =>
   invoke<OkResponse>('unpause_container', { id });
+export const killContainer = (id: string, signal?: string) =>
+  invoke<OkResponse>('kill_container', { id, signal });
 export const removeContainer = (id: string, force?: boolean) =>
   invoke<OkResponse>('remove_container', { id, force });
 export const renameContainer = (id: string, newName: string) =>

@@ -190,6 +190,20 @@ pub async fn unpause_container(id: String, state: State<'_, AppState>) -> CmdRes
 }
 
 #[tauri::command]
+pub async fn kill_container(
+    id: String,
+    signal: Option<String>,
+    state: State<'_, AppState>,
+) -> CmdResult<OkResponse> {
+    let ops = ContainerOps::new(&state.docker);
+    map_err(ops.kill(&id, &signal.unwrap_or_else(|| "SIGKILL".into())).await)?;
+    Ok(OkResponse::with_message(format!(
+        "Container {} killed",
+        id
+    )))
+}
+
+#[tauri::command]
 pub async fn remove_container(
     id: String,
     force: Option<bool>,
