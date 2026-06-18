@@ -49,6 +49,8 @@ import {
   listContainers,
 } from '../../backend/docker';
 import { isTauri } from '../../backend/utils';
+import { useStatsHistory } from '../../hooks/useStatsHistory';
+import StatsCharts from '../shared/StatsCharts';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -159,6 +161,7 @@ export default function ContainersView() {
     {}
   );
   const [refreshing, setRefreshing] = useState(false);
+  const { getStats } = useStatsHistory();
 
   const sortRef = useRef<HTMLDivElement>(null);
   const groupRef = useRef<HTMLDivElement>(null);
@@ -864,6 +867,9 @@ export default function ContainersView() {
                     <Trash2 size={13} /> Remove
                   </button>
                 </div>
+                {selected.status === 'running' && (
+                  <StatsCharts stats={getStats(selected.id)} />
+                )}
               </div>
             </div>
           </>
