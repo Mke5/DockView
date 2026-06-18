@@ -1,17 +1,23 @@
 use crate::docker::client::DockerClient;
+use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
+pub struct ExecSession {
+    pub child: Option<tokio::process::Child>,
+    pub stdin: Option<tokio::process::ChildStdin>,
+    pub container_id: String,
+    pub shell: String,
+}
+
 /// Top-level application state injected into every Tauri command via
 /// `tauri::State<AppState>`.
-///
-/// All fields are `Arc`-wrapped so the struct is cheaply `Clone`able —
-/// Tauri requires managed state to be `Send + Sync + 'static`.
 #[derive(Clone)]
 pub struct AppState {
     pub docker: DockerClient,
     pub shutdown: Arc<tokio::sync::Notify>,
     pub connected: Arc<Mutex<bool>>,
+    pub exec_sessions: Arc<Mutex<HashMap<String, ExecSession>>>,
 }
 
 impl AppState {
@@ -31,6 +37,7 @@ impl AppState {
             docker,
             shutdown: Arc::new(tokio::sync::Notify::new()),
             connected: Arc::new(Mutex::new(connected)),
+            exec_sessions: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 

@@ -79,6 +79,11 @@ pub fn run() {
             api::docker::image_push,
             // Registry
             api::docker::registry_login,
+            // Exec / Terminal
+            api::exec::exec_session_start,
+            api::exec::exec_session_write,
+            api::exec::exec_session_resize,
+            api::exec::exec_session_stop,
         ])
         .run(tauri::generate_context!())
         .expect("error while running dock");
