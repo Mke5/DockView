@@ -1,9 +1,8 @@
 use crate::{
     api::utils::{CmdResult, CommandError},
-    state::ExecSession,
-    state::AppState,
+    state::{AppState, ExecSession},
 };
-use tauri::State;
+use tauri::{Emitter, State};
 use uuid::Uuid;
 
 /// Start a shell session inside a container via `docker exec -i`.
