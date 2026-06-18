@@ -4,17 +4,19 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 /// Wraps a Bollard `Docker` client with reconnect support.
-/// The inner `Option<Docker>` is `None` while the daemon is unreachable.
+/// The inner `Option<Arc<Docker>>` uses double-indirection so
+/// [`DockerClient::get`] returns an `Arc<Docker>` — a single atomic
+/// reference increment — avoiding the cost of cloning the inner
+/// `hyper::Client` connection pool on every operation.
 #[derive(Clone)]
 pub struct DockerClient {
-    inner: Arc<RwLock<Option<Docker>>>,
+    inner: Arc<RwLock<Option<Arc<Docker>>>>,
 }
 
 impl DockerClient {
     /// Try to connect to the local Docker daemon using the default socket path.
     pub async fn new() -> Result<Self> {
-        let docker = connect()?;
-        // Ping to verify the connection is live
+        let docker = Arc::new(connect()?);
         docker
             .ping()
             .await
@@ -32,12 +34,15 @@ impl DockerClient {
         }
     }
 
-    /// Get a reference to the inner `Docker` client, returning an error if
+    /// Get the inner `Docker` client, returning an error if
     /// the daemon is currently disconnected.
-    pub async fn get(&self) -> Result<Docker> {
+    ///
+    /// The returned `Arc` is cheap to clone (one atomic increment).
+    pub async fn get(&self) -> Result<Arc<Docker>> {
         let guard = self.inner.read().await;
         guard
-            .clone()
+            .as_ref()
+            .cloned()
             .ok_or_else(|| anyhow::anyhow!("Not connected to Docker daemon"))
     }
 
@@ -50,7 +55,7 @@ impl DockerClient {
             .context("Docker daemon still unreachable")?;
 
         let mut guard = self.inner.write().await;
-        *guard = Some(docker);
+        *guard = Some(Arc::new(docker));
         tracing::info!("Reconnected to Docker daemon");
         Ok(())
     }
@@ -70,7 +75,6 @@ impl DockerClient {
         if self.is_connected().await {
             return true;
         }
-        // Try a fresh connection
         self.reconnect().await.is_ok()
     }
 }
@@ -97,14 +101,5 @@ pub fn bytes_to_human(bytes: u64) -> String {
         format!("{:.0} KB", bytes as f64 / KB as f64)
     } else {
         format!("{} B", bytes)
-    }
-}
-
-/// Compute CPU % from two consecutive stats snapshots.
-pub fn cpu_percent(cpu_delta: f64, system_delta: f64, num_cpus: f64) -> f64 {
-    if system_delta > 0.0 && cpu_delta > 0.0 {
-        (cpu_delta / system_delta) * num_cpus * 100.0
-    } else {
-        0.0
     }
 }

@@ -31,7 +31,6 @@ export function useStatsHistory(): {
           points = [];
           history.set(s.id, points);
         }
-        const prev = points.length > 0 ? points[points.length - 1] : null;
         const now = Date.now();
         points.push({
           time: now,
