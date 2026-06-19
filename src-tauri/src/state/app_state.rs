@@ -8,6 +8,7 @@ pub struct ExecSession {
     pub stdin: Option<tokio::process::ChildStdin>,
     pub container_id: String,
     pub shell: String,
+    pub read_handles: Vec<tokio::task::JoinHandle<()>>,
 }
 
 /// Top-level application state injected into every Tauri command via
@@ -37,6 +38,15 @@ impl AppState {
             docker,
             shutdown: Arc::new(tokio::sync::Notify::new()),
             connected: Arc::new(Mutex::new(connected)),
+            exec_sessions: Arc::new(Mutex::new(HashMap::new())),
+        }
+    }
+
+    pub fn new_disconnected() -> Self {
+        Self {
+            docker: DockerClient::disconnected(),
+            shutdown: Arc::new(tokio::sync::Notify::new()),
+            connected: Arc::new(Mutex::new(false)),
             exec_sessions: Arc::new(Mutex::new(HashMap::new())),
         }
     }

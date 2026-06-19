@@ -12,11 +12,16 @@ use tauri::{
 };
 
 pub fn run() {
+    std::panic::set_hook(Box::new(|info| {
+        tracing::error!("Panic: {}", info);
+        eprintln!("FATAL: {}", info);
+    }));
+
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_updater::Builder::new().build())
+        // .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             tracing_subscriber::fmt()
                 .with_env_filter(
@@ -26,7 +31,17 @@ pub fn run() {
                 .init();
 
             let handle = app.handle().clone();
-            let state = tauri::async_runtime::block_on(AppState::new());
+            let state = tauri::async_runtime::block_on(async {
+                tokio::time::timeout(
+                    std::time::Duration::from_secs(5),
+                    AppState::new(),
+                )
+                .await
+                .unwrap_or_else(|_| {
+                    tracing::warn!("Docker connection timed out during startup, starting disconnected");
+                    AppState::new_disconnected()
+                })
+            });
             let state_arc = Arc::new(state);
 
             app.manage((*state_arc).clone());
