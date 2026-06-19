@@ -1,5 +1,6 @@
 pub mod client;
 pub mod containers;
+pub mod context;
 pub mod error;
 pub mod images;
 pub mod models;

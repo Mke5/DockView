@@ -3,6 +3,7 @@ use crate::{
     docker::{
         client::bytes_to_human,
         containers::ContainerOps,
+        context::DockerContext,
         images::ImageOps,
         models::{
             ContainerInspect, ContainerStats, ContainerSummary, CreateNetworkOptions, DiskUsage,
@@ -495,6 +496,13 @@ pub async fn image_push(
         let stderr = String::from_utf8_lossy(&output.stderr).to_string();
         Err(stderr.into())
     }
+}
+
+// ─── DOCKER CONTEXT ──────────────────────────────────────────────────────────
+
+#[tauri::command]
+pub async fn docker_context() -> CmdResult<DockerContext> {
+    Ok(crate::docker::context::read_config().await)
 }
 
 // ─── REGISTRY LOGIN ───────────────────────────────────────────────────────────

@@ -16,6 +16,7 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             tracing_subscriber::fmt()
                 .with_env_filter(
@@ -109,6 +110,7 @@ pub fn run() {
             api::docker::image_push,
             // Registry
             api::docker::registry_login,
+            api::docker::docker_context,
             // Exec / Terminal
             api::exec::exec_session_start,
             api::exec::exec_session_write,
