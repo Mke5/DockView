@@ -505,7 +505,7 @@ pub async fn docker_context() -> CmdResult<DockerContext> {
     Ok(crate::docker::context::read_config().await)
 }
 
-// ─── REGISTRY LOGIN ───────────────────────────────────────────────────────────
+// ─── REGISTRY CREDENTIALS (OS Keychain) ───────────────────────────────────────
 
 #[tauri::command]
 pub async fn registry_login(
@@ -513,24 +513,65 @@ pub async fn registry_login(
     username: String,
     password: String,
 ) -> CmdResult<OkResponse> {
-    use std::process::{Command, Stdio};
-    use std::io::Write;
-    let mut child = Command::new("docker")
-        .args(["login", &registry, "-u", &username, "--password-stdin"])
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .map_err(|e| CommandError::new(format!("Failed to spawn docker login: {}", e)))?;
-    if let Some(stdin) = child.stdin.as_mut() {
-        let _ = stdin.write_all(password.as_bytes());
-    }
-    let output = child.wait_with_output()
-        .map_err(|e| CommandError::new(format!("docker login failed: {}", e)))?;
-    if output.status.success() {
-        Ok(OkResponse { ok: true, message: Some(format!("Logged in to {}", registry)) })
-    } else {
-        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
-        Err(CommandError::new(stderr))
-    }
+    // Verify credentials by running docker login
+    let verified = {
+        use std::io::Write;
+        use std::process::{Command, Stdio};
+        let mut child = Command::new("docker")
+            .args(["login", &registry, "-u", &username, "--password-stdin"])
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .map_err(|e| CommandError::new(format!("Failed to spawn docker login: {}", e)))?;
+        if let Some(stdin) = child.stdin.as_mut() {
+            let _ = stdin.write_all(password.as_bytes());
+        }
+        let output = child
+            .wait_with_output()
+            .map_err(|e| CommandError::new(format!("docker login failed: {}", e)))?;
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+            return Err(CommandError::new(stderr));
+        }
+    };
+
+    // Store in OS keychain
+    crate::docker::credentials::save(&registry, &username, &password)
+        .map_err(CommandError::new)?;
+
+    Ok(OkResponse {
+        ok: true,
+        message: Some(format!("Logged in to {}", registry)),
+    })
+}
+
+#[tauri::command]
+pub async fn registry_logout(registry: String) -> CmdResult<OkResponse> {
+    crate::docker::credentials::delete(&registry).map_err(CommandError::new)?;
+    Ok(OkResponse {
+        ok: true,
+        message: Some(format!("Logged out of {}", registry)),
+    })
+}
+
+#[tauri::command]
+pub async fn registry_list_credentials() -> CmdResult<Vec<crate::docker::credentials::StoredCredential>> {
+    // Read stored registries from Docker config
+    let ctx = crate::docker::context::read_config().await;
+    let creds = ctx
+        .auths
+        .into_iter()
+        .filter_map(|r| {
+            crate::docker::credentials::get(&r)
+                .ok()
+                .or_else(|| {
+                    Some(crate::docker::credentials::StoredCredential {
+                        username: String::new(),
+                        registry: r,
+                    })
+                })
+        })
+        .collect();
+    Ok(creds)
 }

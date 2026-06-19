@@ -29,6 +29,7 @@ tokio = { version = "1.42.0", features = ["full"] }
 futures-util = "0.3.31"
 anyhow = "1.0.94"
 thiserror = "2.0.6"
+keyring = "3.6.1"
 uuid              = { version = "1",       features = ["v4"] }
 chrono            = { version = "0.4",     features = ["serde"] }
 tracing           = "0.1"

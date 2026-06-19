@@ -110,6 +110,8 @@ pub fn run() {
             api::docker::image_push,
             // Registry
             api::docker::registry_login,
+            api::docker::registry_logout,
+            api::docker::registry_list_credentials,
             api::docker::docker_context,
             // Exec / Terminal
             api::exec::exec_session_start,
