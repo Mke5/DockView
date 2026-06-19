@@ -36,7 +36,7 @@ impl<'a> ContainerHighOps<'a> {
         let ops = ContainerOps::new(self.client);
         let mut results = Vec::new();
         for id in ids {
-            let r = ops.restart(id, 10).await; // Specify i64 type
+            let r = ops.restart(id, 10_i64).await;
             results.push((id.clone(), r));
         }
         results

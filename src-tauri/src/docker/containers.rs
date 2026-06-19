@@ -246,7 +246,7 @@ impl<'a> ContainerOps<'a> {
             .context("Failed to stop container")
     }
 
-    pub async fn restart(&self, id: &str, timeout: isize) -> Result<()> {
+    pub async fn restart(&self, id: &str, timeout: i64) -> Result<()> {
         let docker = self.client.get().await?;
         let opts = RestartContainerOptions { t: timeout };
         docker

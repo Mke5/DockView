@@ -161,7 +161,7 @@ pub async fn stop_container(
 #[tauri::command]
 pub async fn restart_container(
     id: String,
-    timeout: isize,
+    timeout: i64,
     state: State<'_, AppState>,
 ) -> CmdResult<OkResponse> {
     let ops = ContainerOps::new(&state.docker);
