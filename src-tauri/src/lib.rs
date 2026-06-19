@@ -5,7 +5,11 @@ pub mod state;
 
 use state::AppState;
 use std::sync::Arc;
-use tauri::Manager;
+use tauri::{
+    menu::{Menu, MenuItem},
+    tray::TrayIconBuilder,
+    Manager,
+};
 
 pub fn run() {
     tauri::Builder::default()
@@ -27,7 +31,32 @@ pub fn run() {
             app.manage((*state_arc).clone());
 
             services::event_watcher::spawn(handle.clone(), state_arc.clone());
-            services::stats_collector::spawn(handle, state_arc);
+            services::stats_collector::spawn(handle.clone(), state_arc);
+
+            // System tray
+            let show = MenuItem::with_id(app, "show", "Show/Hide", true, None::<&str>)?;
+            let quit = MenuItem::with_id(app, "quit", "Quit", true, Some("CmdOrCtrl+Q"))?;
+            let menu = Menu::with_items(app, &[&show, &quit])?;
+
+            TrayIconBuilder::new()
+                .menu(&menu)
+                .on_menu_event(move |app_handle, event| match event.id().as_ref() {
+                    "show" => {
+                        if let Some(window) = app_handle.get_webview_window("main") {
+                            if window.is_visible().unwrap_or(false) {
+                                let _ = window.hide();
+                            } else {
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                            }
+                        }
+                    }
+                    "quit" => {
+                        app_handle.exit(0);
+                    }
+                    _ => {}
+                })
+                .build(app)?;
 
             tracing::info!("Dock backend ready");
             Ok(())
