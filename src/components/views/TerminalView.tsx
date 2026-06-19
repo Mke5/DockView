@@ -133,7 +133,9 @@ export default function TerminalView() {
 
   // Update xterm font size when changed
   useEffect(() => {
-    termRef.current?.options.fontSize = fontSize;
+    if (termRef.current) {
+      termRef.current.options.fontSize = fontSize;
+    }
     fitAddonRef.current?.fit();
   }, [fontSize]);
 

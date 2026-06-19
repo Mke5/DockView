@@ -172,6 +172,20 @@ export default function Sidebar() {
           ))}
         </div>
 
+        {/* Keyboard shortcuts hint */}
+        <div
+          style={{
+            padding: '6px 12px 8px',
+            borderTop: '1px solid var(--border)',
+            display: 'flex',
+            gap: 8,
+            flexShrink: 0,
+          }}
+        >
+          <ShortcutBadge keys="Ctrl+K" label="Search" />
+          <ShortcutBadge keys="Ctrl+/" label="Cycle view" />
+        </div>
+
         {/* Footer: resource bars + user */}
         <div
           style={{
@@ -274,6 +288,35 @@ export default function Sidebar() {
         className="resize-handle"
         onMouseDown={onMouseDown}
       />
+    </div>
+  );
+}
+
+function ShortcutBadge({ keys, label }: { keys: string; label: string }) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 4,
+        fontSize: 9.5,
+        color: 'var(--text-3)',
+      }}
+    >
+      <kbd
+        className="mono"
+        style={{
+          fontSize: 8.5,
+          background: 'var(--bg4)',
+          border: '1px solid var(--border)',
+          borderRadius: 3,
+          padding: '1px 4px',
+          color: 'var(--text-2)',
+        }}
+      >
+        {keys}
+      </kbd>
+      <span>{label}</span>
     </div>
   );
 }

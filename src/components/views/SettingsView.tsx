@@ -1,8 +1,9 @@
-import React from 'react';
-import { Save, RotateCcw } from 'lucide-react';
+import React, { useCallback, useState } from 'react';
+import { RefreshCw, Save, RotateCcw } from 'lucide-react';
 import { useSettingsStore } from '../../store';
 import { SettingsSection } from '../../store/types';
 import { Toggle, Field, ViewHeader } from '../shared/ui';
+import { checkForUpdates, installUpdate, UpdateInfo } from '../../backend/updater';
 
 const SECTIONS: { id: SettingsSection; label: string; hint: string }[] = [
   { id: 'general', label: 'General', hint: 'Theme, startup, updates' },
@@ -482,6 +483,7 @@ export default function SettingsView() {
                   display: 'grid',
                   gridTemplateColumns: '1fr 1fr',
                   gap: 8,
+                  marginBottom: 16,
                 }}
               >
                 {[
@@ -524,10 +526,65 @@ export default function SettingsView() {
                   </div>
                 ))}
               </div>
+
+              <UpdateSection />
             </SettingsCard>
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function UpdateSection() {
+  const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
+  const [checking, setChecking] = useState(false);
+
+  const handleCheck = useCallback(async () => {
+    setChecking(true);
+    const info = await checkForUpdates();
+    setUpdateInfo(info);
+    setChecking(false);
+  }, []);
+
+  return (
+    <div>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          marginBottom: 8,
+        }}
+      >
+        <button className="btn" onClick={handleCheck} disabled={checking}>
+          <RefreshCw
+            size={12}
+            style={{ marginRight: 4, ...(checking ? { animation: 'spin 1s linear infinite' } : {}) }}
+          />
+          {checking ? 'Checking…' : 'Check for Updates'}
+        </button>
+        {updateInfo?.available && (
+          <button
+            className="btn btn-primary"
+            onClick={() => installUpdate()}
+          >
+            Update to v{updateInfo.version}
+          </button>
+        )}
+      </div>
+      {updateInfo && (
+        <div
+          style={{
+            fontSize: 12,
+            color: updateInfo.available ? 'var(--green)' : 'var(--text-2)',
+          }}
+        >
+          {updateInfo.available
+            ? `Update v${updateInfo.version} available`
+            : 'You are on the latest version'}
+        </div>
+      )}
     </div>
   );
 }
