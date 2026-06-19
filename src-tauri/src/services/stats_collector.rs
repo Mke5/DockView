@@ -12,6 +12,7 @@ use tauri::{AppHandle, Emitter};
 
 const BATCH_INTERVAL: Duration = Duration::from_secs(2);
 const RECONCILE_INTERVAL: Duration = Duration::from_secs(5);
+const MAX_STATS_BUFFER: usize = 500;
 
 /// Spawns a background task that subscribes to per-container streaming stats
 /// and emits a `docker://stats` event every 2 seconds.
@@ -21,7 +22,7 @@ const RECONCILE_INTERVAL: Duration = Duration::from_secs(5);
 pub fn spawn(app: AppHandle, state: Arc<AppState>) {
     tauri::async_runtime::spawn(async move {
         let (stats_tx, mut stats_rx) =
-            tokio::sync::mpsc::unbounded_channel::<(String, crate::docker::models::ContainerStats)>();
+            tokio::sync::mpsc::channel::<(String, crate::docker::models::ContainerStats)>(MAX_STATS_BUFFER);
         let mut stream_handles: HashMap<String, tokio::task::JoinHandle<()>> = HashMap::new();
         let mut latest: HashMap<String, crate::docker::models::ContainerStats> = HashMap::new();
         let mut backoff = ConnectionBackoff::new();
@@ -61,7 +62,7 @@ pub fn spawn(app: AppHandle, state: Arc<AppState>) {
 
 async fn reconcile_containers(
     state: &Arc<AppState>,
-    tx: &tokio::sync::mpsc::UnboundedSender<(String, crate::docker::models::ContainerStats)>,
+    tx: &tokio::sync::mpsc::Sender<(String, crate::docker::models::ContainerStats)>,
     handles: &mut HashMap<String, tokio::task::JoinHandle<()>>,
 ) {
     if !state.is_connected().await {
@@ -112,7 +113,7 @@ async fn reconcile_containers(
 async fn stream_container_stats(
     docker: &bollard::Docker,
     container_id: &str,
-    tx: &tokio::sync::mpsc::UnboundedSender<(String, crate::docker::models::ContainerStats)>,
+    tx: &tokio::sync::mpsc::Sender<(String, crate::docker::models::ContainerStats)>,
 ) {
     let mut stream = docker.stats(
         container_id,
@@ -126,7 +127,7 @@ async fn stream_container_stats(
         match item {
             Ok(raw) => {
                 let stats = bollard_stats_to_container_stats(container_id, &raw);
-                if tx.send((container_id.to_string(), stats)).is_err() {
+                if tx.send((container_id.to_string(), stats)).await.is_err() {
                     break;
                 }
             }
