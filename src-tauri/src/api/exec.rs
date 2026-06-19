@@ -42,7 +42,7 @@ pub async fn exec_session_start(
     // Spawn a task that reads stdout and fires events
     let sid = session_id.clone();
     let app_clone = app.clone();
-    tokio::spawn(async move {
+    let stdout_handle = tokio::spawn(async move {
         let mut buf = vec![0u8; 4096];
         loop {
             match stdout.read(&mut buf).await {
@@ -63,7 +63,7 @@ pub async fn exec_session_start(
     // Spawn a task that reads stderr and fires events
     let sid = session_id.clone();
     let app_clone2 = app.clone();
-    tokio::spawn(async move {
+    let stderr_handle = tokio::spawn(async move {
         let mut buf = vec![0u8; 4096];
         loop {
             match stderr.read(&mut buf).await {
@@ -87,6 +87,7 @@ pub async fn exec_session_start(
         stdin,
         container_id: container_id.clone(),
         shell: shell.clone(),
+        read_handles: vec![stdout_handle, stderr_handle],
     };
     state.exec_sessions.lock().await.insert(session_id.clone(), session);
 
@@ -155,6 +156,10 @@ pub async fn exec_session_stop(
 ) -> CmdResult<()> {
     let mut sessions = state.exec_sessions.lock().await;
     if let Some(mut session) = sessions.remove(&session_id) {
+        // Abort read tasks first to prevent use-after-close
+        for handle in &session.read_handles {
+            handle.abort();
+        }
         if let Some(ref mut child) = session.child {
             let _ = child.kill().await;
             let _ = child.wait().await;
