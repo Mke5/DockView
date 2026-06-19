@@ -7,6 +7,7 @@ interface TerminalState {
   activeTabId: string;
   fontSize: number;
   addTab: (tab: Omit<TerminalTab, 'id' | 'history'>) => void;
+  restoreTab: (tab: TerminalTab) => void;
   closeTab: (id: string) => void;
   setActiveTab: (id: string) => void;
   pushLine: (tabId: string, line: Omit<TerminalHistoryLine, 'id'>) => void;
@@ -53,6 +54,11 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
         activeTabId: id,
       };
     }),
+  restoreTab: (tab) =>
+    set((state) => ({
+      tabs: [...state.tabs, { ...tab, id: `term-${Date.now()}` }],
+      activeTabId: tab.id,
+    })),
   closeTab: (id) =>
     set((state) => {
       const tabs = state.tabs.filter((t) => t.id !== id);
