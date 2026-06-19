@@ -514,27 +514,30 @@ pub async fn registry_login(
     password: String,
 ) -> CmdResult<OkResponse> {
     // Verify credentials by running docker login
-    let verified = {
-        use std::io::Write;
-        use std::process::{Command, Stdio};
-        let mut child = Command::new("docker")
-            .args(["login", &registry, "-u", &username, "--password-stdin"])
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .spawn()
-            .map_err(|e| CommandError::new(format!("Failed to spawn docker login: {}", e)))?;
-        if let Some(stdin) = child.stdin.as_mut() {
-            let _ = stdin.write_all(password.as_bytes());
-        }
-        let output = child
-            .wait_with_output()
-            .map_err(|e| CommandError::new(format!("docker login failed: {}", e)))?;
-        if !output.status.success() {
-            let stderr = String::from_utf8_lossy(&output.stderr).to_string();
-            return Err(CommandError::new(stderr));
-        }
-    };
+    use std::io::Write;
+    use std::process::{Command, Stdio};
+    let mut child = Command::new("docker")
+        .args(["login", &registry, "-u", &username, "--password-stdin"])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|e| CommandError::new(format!("Failed to spawn docker login: {}", e)))?;
+
+    if let Some(stdin) = child.stdin.as_mut() {
+        stdin
+            .write_all(password.as_bytes())
+            .map_err(|e| CommandError::new(format!("Failed to send password: {}", e)))?;
+    }
+
+    let output = child
+        .wait_with_output()
+        .map_err(|e| CommandError::new(format!("docker login failed: {}", e)))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+        return Err(CommandError::new(stderr));
+    }
 
     // Store in OS keychain
     crate::docker::credentials::save(&registry, &username, &password)
