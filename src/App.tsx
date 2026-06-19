@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
 import Titlebar from './components/layout/Titlebar';
 import Sidebar from './components/layout/Sidebar';
@@ -18,9 +18,24 @@ import TerminalView from './components/views/TerminalView';
 import { useAppStore } from './store';
 import { isTauri } from './backend/utils';
 import { initDockerBridge } from './backend/bridge';
+import { ErrorBoundary } from './components/shared/ErrorBoundary';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+
+const VIEW_ORDER = [
+  'containers',
+  'images',
+  'volumes',
+  'networks',
+  'compose',
+  'builds',
+  'registry',
+  'logs',
+  'terminal',
+  'settings',
+] as const;
 
 export default function App() {
-  const { activeView, setEngineRunning } = useAppStore();
+  const { activeView, setEngineRunning, setActiveView } = useAppStore();
 
   useEffect(() => {
     if (!isTauri()) return;
@@ -28,6 +43,44 @@ export default function App() {
       .then(() => setEngineRunning(true))
       .catch(() => setEngineRunning(false));
   }, []);
+
+  const shortcuts = useMemo(() => [
+    {
+      key: 'k',
+      ctrl: true,
+      handler: () => {
+        const el = document.querySelector<HTMLInputElement>('[data-search]');
+        el?.focus();
+      },
+    },
+    {
+      key: '/',
+      ctrl: true,
+      handler: () => {
+        const idx = VIEW_ORDER.indexOf(activeView as typeof VIEW_ORDER[number]);
+        const next = VIEW_ORDER[(idx + 1) % VIEW_ORDER.length];
+        setActiveView(next);
+      },
+    },
+  ], [activeView, setActiveView]);
+
+  useKeyboardShortcuts(shortcuts);
+
+  const renderView = useCallback(() => {
+    const views: Record<string, React.ReactNode> = {
+      containers: <ContainersView />,
+      images: <ImagesView />,
+      volumes: <VolumesView />,
+      networks: <NetworksView />,
+      compose: <ComposeView />,
+      builds: <BuildsView />,
+      registry: <RegistryView />,
+      logs: <LogsView />,
+      terminal: <TerminalView />,
+      settings: <SettingsView />,
+    };
+    return views[activeView] ?? null;
+  }, [activeView]);
 
   return (
     <div
@@ -50,16 +103,9 @@ export default function App() {
             background: 'var(--bg1)',
           }}
         >
-          {activeView === 'containers' && <ContainersView />}
-          {activeView === 'images' && <ImagesView />}
-          {activeView === 'volumes' && <VolumesView />}
-          {activeView === 'networks' && <NetworksView />}
-          {activeView === 'compose' && <ComposeView />}
-          {activeView === 'builds' && <BuildsView />}
-          {activeView === 'registry' && <RegistryView />}
-          {activeView === 'logs' && <LogsView />}
-          {activeView === 'terminal' && <TerminalView />}
-          {activeView === 'settings' && <SettingsView />}
+          <ErrorBoundary name={activeView} key={activeView}>
+            {renderView()}
+          </ErrorBoundary>
         </main>
       </div>
       <StatusBar />
