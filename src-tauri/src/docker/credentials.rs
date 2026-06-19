@@ -30,16 +30,6 @@ pub fn get(registry: &str) -> Result<StoredCredential, String> {
     })
 }
 
-/// Retrieve both username and password from the keychain.
-pub fn get_with_password(registry: &str) -> Result<(String, String), String> {
-    let entry = Entry::new(SERVICE_NAME, registry).map_err(|e| e.to_string())?;
-    let payload = entry.get_password().map_err(|e| e.to_string())?;
-    let (username, password) = payload
-        .split_once(':')
-        .ok_or_else(|| "Invalid credential format".to_string())?;
-    Ok((username.to_string(), password.to_string()))
-}
-
 /// Delete a stored credential from the OS keychain.
 pub fn delete(registry: &str) -> Result<(), String> {
     let entry = Entry::new(SERVICE_NAME, registry).map_err(|e| e.to_string())?;
