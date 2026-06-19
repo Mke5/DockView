@@ -2,7 +2,6 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     path::PathBuf,
-    sync::Arc,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -32,11 +31,20 @@ pub async fn read_config() -> DockerContext {
         .unwrap_or_default()
 }
 
+fn home_dir() -> String {
+    #[cfg(target_os = "windows")]
+    {
+        std::env::var("USERPROFILE")
+            .unwrap_or_else(|_| std::env::var("HOME").unwrap_or_else(|_| "C:\\Users\\Default".into()))
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        std::env::var("HOME").unwrap_or_else(|_| "/tmp".into())
+    }
+}
+
 fn config_path() -> PathBuf {
-    let home = std::env::var("HOME")
-        .or_else(|_| std::env::var("USERPROFILE"))
-        .unwrap_or_else(|_| "/root".into());
-    PathBuf::from(home).join(".docker").join("config.json")
+    PathBuf::from(home_dir()).join(".docker").join("config.json")
 }
 
 fn read_config_sync() -> DockerContext {
@@ -78,10 +86,7 @@ fn read_config_sync() -> DockerContext {
 
 /// Scan the Docker contexts directory for available context names.
 fn list_context_dirs() -> Vec<String> {
-    let home = std::env::var("HOME")
-        .or_else(|_| std::env::var("USERPROFILE"))
-        .unwrap_or_else(|_| "/root".into());
-    let meta_dir = PathBuf::from(home).join(".docker").join("contexts").join("meta");
+    let meta_dir = PathBuf::from(home_dir()).join(".docker").join("contexts").join("meta");
 
     let mut contexts = vec!["default".to_string()];
     if let Ok(entries) = std::fs::read_dir(&meta_dir) {
