@@ -96,7 +96,7 @@ const MOCK_CONTAINERS: Container[] = [
 ];
 
 export const useContainerStore = create<ContainerState>((set) => ({
-  containers: MOCK_CONTAINERS,
+  containers: [],
   selectedId: null,
   filter: 'all',
   sortKey: 'name',

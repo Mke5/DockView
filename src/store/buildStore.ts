@@ -342,7 +342,7 @@ const MOCK_BUILDS: BuildRecord[] = [
 ];
 
 export const useBuildStore = create<BuildState>((set) => ({
-  builds: MOCK_BUILDS,
+  builds: [],
   selectedId: null,
   filter: 'all',
   activeLog: null,

@@ -24,7 +24,7 @@ function makeHistory(
 const MOCK_TABS: TerminalTab[] = [];
 
 export const useTerminalStore = create<TerminalState>((set, get) => ({
-  tabs: MOCK_TABS,
+  tabs: [],
   activeTabId: 'term-host',
   fontSize: 12,
   addTab: (tab) =>

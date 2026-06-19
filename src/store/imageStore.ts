@@ -136,7 +136,7 @@ const MOCK_IMAGES: DockerImage[] = [
 ];
 
 export const useImageStore = create<ImageState>((set) => ({
-  images: MOCK_IMAGES,
+  images: [],
   selectedId: null,
   filter: 'all',
   sortKey: 'repository',

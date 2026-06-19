@@ -127,7 +127,7 @@ const MOCK_NETWORKS: Network[] = [
 ];
 
 export const useNetworkStore = create<NetworkState>((set) => ({
-  networks: MOCK_NETWORKS,
+  networks: [],
   selectedId: null,
   filter: 'all',
   sortKey: 'name',

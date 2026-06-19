@@ -88,7 +88,7 @@ const MOCK_VOLUMES: Volume[] = [
 ];
 
 export const useVolumeStore = create<VolumeState>((set) => ({
-  volumes: MOCK_VOLUMES,
+  volumes: [],
   selectedId: null,
   filter: 'all',
   sortKey: 'name',

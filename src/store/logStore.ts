@@ -44,8 +44,8 @@ const MOCK_STREAMS: LogStream[] = [
 ];
 
 export const useLogStore = create<LogState>((set) => ({
-  streams: MOCK_STREAMS,
-  activeStreamIds: ['log-nginx', 'log-postgres', 'log-redis'],
+  streams: [],
+  activeStreamIds: [],
   filter: 'all',
   searchQuery: '',
   follow: true,

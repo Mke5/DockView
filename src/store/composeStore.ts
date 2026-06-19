@@ -175,7 +175,7 @@ const MOCK_STACKS: ComposeStack[] = [
 ];
 
 export const useComposeStore = create<ComposeState>((set) => ({
-  stacks: MOCK_STACKS,
+  stacks: [],
   selectedId: null,
   expandedIds: ['stack-dockview'],
   filter: 'all',

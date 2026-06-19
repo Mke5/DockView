@@ -147,8 +147,8 @@ interface RegistryState {
 }
 
 export const useRegistryStore = create<RegistryState>((set) => ({
-  accounts: MOCK_ACCOUNTS,
-  selectedAccountId: 'reg-dockerhub',
+  accounts: [],
+  selectedAccountId: null,
   selectedRepoId: null,
   filter: 'all',
   searchQuery: '',
