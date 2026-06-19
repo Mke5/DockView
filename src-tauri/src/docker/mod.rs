@@ -6,5 +6,4 @@ pub mod error;
 pub mod images;
 pub mod models;
 pub mod networks;
-pub mod ops;
 pub mod volumes;
