@@ -248,7 +248,7 @@ impl<'a> ContainerOps<'a> {
 
     pub async fn restart(&self, id: &str, timeout: i64) -> Result<()> {
         let docker = self.client.get().await?;
-        let opts = RestartContainerOptions { t: timeout };
+        let opts = RestartContainerOptions { t: timeout as isize };
         docker
             .restart_container(id, Some(opts))
             .await

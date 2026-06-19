@@ -36,14 +36,15 @@ pub async fn docker_reconnect(state: State<'_, AppState>) -> CmdResult<bool> {
 #[tauri::command]
 pub async fn docker_system_info(state: State<'_, AppState>) -> CmdResult<SystemInfo> {
     let docker = state.docker.get().await.map_err(CommandError::from)?;
-    let info = docker
-        .info()
-        .await
-        .map_err(|e| CommandError::new(e.to_string()))?;
+    let (info, version) = tokio::try_join!(
+        docker.info(),
+        docker.version(),
+    )
+    .map_err(|e| CommandError::new(e.to_string()))?;
 
     Ok(SystemInfo {
         docker_version: info.server_version.clone().unwrap_or_default(),
-        api_version: String::new(),
+        api_version: version.api_version.unwrap_or_default(),
         os: info.operating_system.clone().unwrap_or_default(),
         arch: info.architecture.unwrap_or_default(),
         total_memory: info.mem_total.unwrap_or(0) as u64,
