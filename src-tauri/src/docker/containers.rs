@@ -13,6 +13,7 @@ use std::collections::HashMap;
 
 use crate::docker::{
     client::DockerClient,
+    error::DockerError,
     models::{
         bollard_stats_to_container_stats, ContainerInspect, ContainerStats, ContainerStatus,
         ContainerSummary, LogLine, LogStream, MountPoint, NetworkEndpoint, PortMapping,
@@ -403,8 +404,8 @@ impl<'a> ContainerOps<'a> {
         let raw = stream
             .next()
             .await
-            .ok_or_else(|| anyhow::anyhow!("No stats returned"))?
-            .context("Stats stream error")?;
+            .ok_or_else(|| DockerError::container("stats", "no data returned"))?
+            .map_err(|e| DockerError::container("stats", e))?;
 
         Ok(bollard_stats_to_container_stats(id, &raw))
     }

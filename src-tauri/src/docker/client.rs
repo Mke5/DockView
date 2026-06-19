@@ -43,7 +43,7 @@ impl DockerClient {
         guard
             .as_ref()
             .cloned()
-            .ok_or_else(|| anyhow::anyhow!("Not connected to Docker daemon"))
+            .ok_or_else(|| crate::docker::error::DockerError::NotConnected.into())
     }
 
     /// Attempt to reconnect to the Docker daemon.

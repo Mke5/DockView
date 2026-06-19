@@ -1,3 +1,4 @@
+use crate::docker::error::DockerError;
 use serde::{Deserialize, Serialize};
 
 /// Every Tauri command returns `Result<T, CommandError>`.
@@ -39,6 +40,12 @@ impl From<String> for CommandError {
 impl From<&str> for CommandError {
     fn from(s: &str) -> Self {
         Self::new(s)
+    }
+}
+
+impl From<DockerError> for CommandError {
+    fn from(e: DockerError) -> Self {
+        Self::new(e.to_string())
     }
 }
 

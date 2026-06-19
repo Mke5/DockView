@@ -1,5 +1,6 @@
 use crate::docker::client::DockerClient;
 use crate::docker::containers::ContainerOps;
+use crate::docker::error::DockerError;
 use crate::docker::models::{ContainerStatus, ContainerSummary};
 use anyhow::Result;
 
@@ -51,7 +52,7 @@ impl<'a> ContainerHighOps<'a> {
                 Some(bollard::container::KillContainerOptions { signal: "SIGKILL" }),
             )
             .await
-            .map_err(|e| anyhow::anyhow!("Failed to kill container: {}", e))
+            .map_err(|e| DockerError::container("kill", e))
     }
 
     /// Prune all stopped containers, returning (ids_removed, bytes_reclaimed).
@@ -60,7 +61,7 @@ impl<'a> ContainerHighOps<'a> {
         let result = docker
             .prune_containers(None::<bollard::container::PruneContainersOptions<String>>)
             .await
-            .map_err(|e| anyhow::anyhow!("Prune failed: {}", e))?;
+            .map_err(|e| DockerError::prune("containers", e))?;
         let ids = result.containers_deleted.unwrap_or_default();
         let reclaimed = result.space_reclaimed.unwrap_or(0) as u64;
         Ok((ids, reclaimed))
