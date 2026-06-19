@@ -1,4 +1,4 @@
-use crate::{docker::models::DockerEvent, state::AppState};
+use crate::{docker::models::DockerEvent, services::backoff::ConnectionBackoff, state::AppState};
 use bollard::system::EventsOptions;
 use futures_util::StreamExt;
 use std::sync::Arc;
@@ -6,14 +6,20 @@ use tauri::{AppHandle, Emitter};
 
 /// Spawns a background task that streams Docker daemon events and emits them
 /// to the frontend as `docker://event` Tauri events.
+///
+/// Uses exponential backoff (1s → 30s max) between reconnection attempts.
 pub fn spawn(app: AppHandle, state: Arc<AppState>) {
     tauri::async_runtime::spawn(async move {
+        let mut backoff = ConnectionBackoff::new();
+
         loop {
             let docker = match state.docker.get().await {
-                Ok(d) => d,
+                Ok(d) => {
+                    backoff.reset();
+                    d
+                }
                 Err(_) => {
-                    // Daemon not ready yet — wait and retry
-                    tokio::time::sleep(std::time::Duration::from_secs(3)).await;
+                    backoff.sleep().await;
                     continue;
                 }
             };
@@ -66,7 +72,7 @@ pub fn spawn(app: AppHandle, state: Arc<AppState>) {
                             }
                             Some(Err(e)) => {
                                 tracing::warn!("Docker event stream error: {}", e);
-                                break; // reconnect outer loop
+                                break;
                             }
                             None => {
                                 tracing::info!("Docker event stream ended");
@@ -81,8 +87,7 @@ pub fn spawn(app: AppHandle, state: Arc<AppState>) {
                 }
             }
 
-            // Stream ended or errored — wait before reconnecting
-            tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+            backoff.sleep().await;
         }
     });
 }

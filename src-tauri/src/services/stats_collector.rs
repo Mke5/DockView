@@ -1,4 +1,5 @@
 use crate::docker::models::bollard_stats_to_container_stats;
+use crate::services::backoff::ConnectionBackoff;
 use crate::state::AppState;
 use bollard::container::StatsOptions;
 use futures_util::StreamExt;
@@ -15,17 +16,15 @@ const RECONCILE_INTERVAL: Duration = Duration::from_secs(5);
 /// Spawns a background task that subscribes to per-container streaming stats
 /// and emits a `docker://stats` event every 2 seconds.
 ///
-/// This replaces the old polling approach — instead of one-shot stats calls
-/// every 2 seconds per container we maintain one persistent stream per
-/// running container.  For 100+ containers this reduces daemon load from
-/// 50 queries/second to effectively zero incremental queries (streams push
-/// data as the kernel produces it).
+/// Uses exponential backoff (1s → 30s max) for reconciliation failures
+/// so that when the daemon is unreachable the collector doesn't busy-loop.
 pub fn spawn(app: AppHandle, state: Arc<AppState>) {
     tauri::async_runtime::spawn(async move {
         let (stats_tx, mut stats_rx) =
             tokio::sync::mpsc::unbounded_channel::<(String, crate::docker::models::ContainerStats)>();
         let mut stream_handles: HashMap<String, tokio::task::JoinHandle<()>> = HashMap::new();
         let mut latest: HashMap<String, crate::docker::models::ContainerStats> = HashMap::new();
+        let mut backoff = ConnectionBackoff::new();
 
         let mut reconcile = tokio::time::interval(RECONCILE_INTERVAL);
         let mut batch = tokio::time::interval(BATCH_INTERVAL);
@@ -37,7 +36,12 @@ pub fn spawn(app: AppHandle, state: Arc<AppState>) {
                     return;
                 }
                 _ = reconcile.tick() => {
-                    reconcile_containers(&state, &stats_tx, &mut stream_handles).await;
+                    if state.is_connected().await {
+                        backoff.reset();
+                        reconcile_containers(&state, &stats_tx, &mut stream_handles).await;
+                    } else {
+                        backoff.sleep().await;
+                    }
                 }
                 Some((id, s)) = stats_rx.recv() => {
                     latest.insert(id, s);
