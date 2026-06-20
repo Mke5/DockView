@@ -16,15 +16,7 @@ interface TerminalState {
   setCwd: (tabId: string, cwd: string) => void;
 }
 
-function makeHistory(
-  lines: Omit<TerminalHistoryLine, 'id'>[]
-): TerminalHistoryLine[] {
-  return lines.map((l, i) => ({ ...l, id: `h${i}` }));
-}
-
-const MOCK_TABS: TerminalTab[] = [];
-
-export const useTerminalStore = create<TerminalState>((set, get) => ({
+export const useTerminalStore = create<TerminalState>((set) => ({
   tabs: [],
   activeTabId: 'term-host',
   fontSize: 12,

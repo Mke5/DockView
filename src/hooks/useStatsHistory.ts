@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { onDockerStats, ContainerStats } from '../backend/docker';
+import { onDockerStats } from '../backend/docker';
 
 const MAX_POINTS = 90; // 3 minutes at 2s interval
 

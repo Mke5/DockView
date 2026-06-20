@@ -39,7 +39,6 @@ import {
 import {
   startContainer,
   stopContainer,
-  restartContainer,
   pauseContainer,
   unpauseContainer,
   killContainer,
@@ -149,7 +148,6 @@ export default function ContainersView() {
     removeContainer: removeFromStore,
     updateContainerStatus,
     addContainer,
-    setContainers,
   } = useContainerStore();
   const { searchQuery } = useAppStore();
 
@@ -182,7 +180,7 @@ export default function ContainersView() {
     if (!isTauri()) return;
     setRefreshing(true);
     try {
-      const raw = await listContainers(true);
+      await listContainers(true);
       // bridge already in store via initDockerBridge, but allow manual refresh
     } finally {
       setRefreshing(false);

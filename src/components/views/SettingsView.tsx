@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { RefreshCw, Save, RotateCcw } from 'lucide-react';
 import { useSettingsStore } from '../../store';
 import { SettingsSection } from '../../store/types';
-import { Toggle, Field, ViewHeader } from '../shared/ui';
+import { Toggle, Field } from '../shared/ui';
 import { checkForUpdates, installUpdate, UpdateInfo } from '../../backend/updater';
 
 const SECTIONS: { id: SettingsSection; label: string; hint: string }[] = [

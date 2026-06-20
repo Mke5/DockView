@@ -1,22 +1,19 @@
-import React, { useRef, useState } from 'react';
+import { useState } from 'react';
 import {
   Archive,
-  Check,
   Plus,
   RefreshCw,
   Trash2,
   UploadCloud,
   DownloadCloud,
-  X,
 } from 'lucide-react';
 import {
   RegistryAccount,
   RegistryRepo,
-  RegistryTag,
   useAppStore,
   useRegistryStore,
 } from '../../store';
-import { Modal, Field, ViewHeader, StatusBadge, Spinner } from '../shared/ui';
+import { Modal, Field, ViewHeader, Spinner } from '../shared/ui';
 import { useResizeXRight } from '../shared/useResize';
 import { isTauri } from '../../backend/utils';
 import { invoke } from '@tauri-apps/api/core';
@@ -30,11 +27,8 @@ export default function RegistryView() {
     selectAccount,
     selectRepo,
     setSearchQuery,
-    disconnectAccount,
     connectAccount,
     addAccount,
-    addRepo,
-    addTag,
     deleteRepo,
   } = useRegistryStore();
   const { searchQuery: globalSearch } = useAppStore();
@@ -567,7 +561,6 @@ export default function RegistryView() {
         <PushImageModal
           onClose={() => setShowPushModal(false)}
           accounts={accounts.filter((a) => a.status === 'connected')}
-          onPushed={(accountId, repo) => addRepo(accountId, repo)}
         />
       )}
       {pullModal && (
@@ -727,11 +720,9 @@ function AddRegistryModal({
 function PushImageModal({
   onClose,
   accounts,
-  onPushed,
 }: {
   onClose: () => void;
   accounts: RegistryAccount[];
-  onPushed: (accountId: string, repo: RegistryRepo) => void;
 }) {
   const [accountId, setAccountId] = useState(accounts[0]?.id ?? '');
   const [localImage, setLocalImage] = useState('');

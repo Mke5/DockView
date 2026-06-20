@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   ArrowDown,
   ArrowUp,
@@ -14,7 +14,6 @@ import {
   Modal,
   Field,
   ViewHeader,
-  StatusBadge,
   DropdownMenu,
   DropdownHeader,
   DropdownItem,
@@ -25,7 +24,6 @@ import {
   removeImage,
   pruneImages,
   pullImageStream,
-  listImages,
 } from '../../backend/docker';
 import { isTauri } from '../../backend/utils';
 
@@ -77,8 +75,6 @@ export default function ImagesView() {
     setSort,
     removeImage: removeFromStore,
     pruneUnused,
-    addImage,
-    setImages,
   } = useImageStore();
   const { searchQuery } = useAppStore();
 
@@ -87,7 +83,7 @@ export default function ImagesView() {
   const [showPushModal, setShowPushModal] = useState<DockerImage | null>(null);
   const [confirmPrune, setConfirmPrune] = useState(false);
   const [pruning, setPruning] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  const [refreshing] = useState(false);
   const sortRef = useRef<HTMLDivElement>(null);
   const detail = useResizeXRight(300, 240, 520);
 
@@ -129,7 +125,7 @@ export default function ImagesView() {
     setPruning(true);
     try {
       if (isTauri()) {
-        const result = await pruneImages();
+        await pruneImages();
         unused.forEach((img) => removeFromStore(img.id));
       } else {
         pruneUnused();
@@ -501,7 +497,6 @@ export default function ImagesView() {
       {showPullModal && (
         <PullModal
           onClose={() => setShowPullModal(false)}
-          onPulled={addImage}
         />
       )}
       {showPushModal && (
@@ -557,10 +552,8 @@ export default function ImagesView() {
 
 function PullModal({
   onClose,
-  onPulled,
 }: {
   onClose: () => void;
-  onPulled: (img: DockerImage) => void;
 }) {
   const [query, setQuery] = useState('');
   const [tag, setTag] = useState('latest');

@@ -62,7 +62,6 @@ export default function TerminalView() {
     closeTab,
     setActiveTab,
     pushLine,
-    clearTab,
     fontSize,
     setFontSize,
   } = useTerminalStore();

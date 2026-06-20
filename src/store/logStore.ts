@@ -1,6 +1,6 @@
 // stores/logStore.ts
 import { create } from 'zustand';
-import { LogStream, LogFilter, LogLevel, LogEntry } from './types';
+import { LogFilter, LogStream } from './types';
 
 interface LogState {
   streams: LogStream[];
@@ -21,27 +21,6 @@ interface LogState {
   setShowSource: (v: boolean) => void;
   clearStream: (id: string) => void;
 }
-
-// Helper function (keep internal)
-function makeEntries(
-  sourceId: string,
-  source: string,
-  lines: { t: string; l: LogLevel; m: string; s?: 'stdout' | 'stderr' }[]
-): LogEntry[] {
-  return lines.map((line, i) => ({
-    id: `${sourceId}-${i}`,
-    timestamp: line.t,
-    level: line.l,
-    source,
-    sourceId,
-    message: line.m,
-    stream: line.s ?? 'stdout',
-  }));
-}
-
-const MOCK_STREAMS: LogStream[] = [
-  // ... copy from original (including the makeEntries calls)
-];
 
 export const useLogStore = create<LogState>((set) => ({
   streams: [],

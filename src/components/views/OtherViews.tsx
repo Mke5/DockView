@@ -1,15 +1,11 @@
 import React, { useState } from 'react';
 import {
-  Database,
-  Share2,
   Hammer,
   FileText,
   Trash2,
   Plus,
   RefreshCw,
-  Play,
   Square,
-  Check,
 } from 'lucide-react';
 import {
   useAppStore,
@@ -853,14 +849,6 @@ export function BuildsView() {
     return matchFilter && matchSearch;
   });
   const selected = builds.find((b) => b.id === selectedId) ?? null;
-
-  const STATUS_COLOR: Record<string, string> = {
-    success: 'var(--green)',
-    failed: 'var(--red)',
-    building: 'var(--blue)',
-    cached: 'var(--purple)',
-    cancelled: 'var(--text-2)',
-  };
 
   return (
     <div
