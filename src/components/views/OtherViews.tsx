@@ -250,7 +250,7 @@ export function VolumesView() {
                       ['Size', selected.size],
                       ['Created', selected.created],
                     ].map(([k, v]) => (
-                      <React.Fragment key={k as string}>
+                      <React.Fragment key={k}>
                         <span className="detail-k">{k}</span>
                         <span className="detail-v">{v}</span>
                       </React.Fragment>
@@ -647,7 +647,7 @@ export function NetworksView() {
                     ['Internal', selected.internal ? 'Yes' : 'No'],
                     ['IPv6', selected.enableIPv6 ? 'Enabled' : 'Disabled'],
                   ].map(([k, v]) => (
-                    <React.Fragment key={k as string}>
+                    <React.Fragment key={k}>
                       <span className="detail-k">{k}</span>
                       <span className="detail-v">{v}</span>
                     </React.Fragment>
@@ -1050,7 +1050,7 @@ export function BuildsView() {
                       ['Started', selected.startedAt],
                       ['Layers', selected.layers?.toString() ?? '—'],
                     ].map(([k, v]) => (
-                      <React.Fragment key={k as string}>
+                      <React.Fragment key={k}>
                         <span className="detail-k">{k}</span>
                         <span className="detail-v">{v}</span>
                       </React.Fragment>

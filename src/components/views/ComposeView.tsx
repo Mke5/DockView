@@ -807,7 +807,7 @@ export default function ComposeView() {
 }
 
 function parseServices(y: string): ComposeService[] {
-  const matches = [...y.matchAll(/^  ([a-zA-Z0-9_-]+):\s*$/gm)].map(
+  const matches = [...y.matchAll(/^ {2}([a-zA-Z0-9_-]+):\s*$/gm)].map(
     (m) => m[1]
   );
   return matches.map((svcName) => {
