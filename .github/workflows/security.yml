@@ -25,7 +25,7 @@ jobs:
           fetch-depth: 0
 
       - name: Run TruffleHog OSS
-        uses: trufflesecurity/trufflehog@main
+        uses: trufflesecurity/trufflehog@v3.88.24
         with:
           path: ./
           base: main
@@ -36,7 +36,6 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
 
   # Dependency vulnerability scanning (npm)
   npm-audit:
@@ -63,11 +62,12 @@ jobs:
         run: npm audit fix --dry-run
 
       - name: Generate security report
+        if: always()
         run: |
-          npm audit --json > npm-audit-report.json
+          npm audit --json > npm-audit-report.json 2>/dev/null || true
           echo "## npm Security Audit Report" >> $GITHUB_STEP_SUMMARY
           echo '```json' >> $GITHUB_STEP_SUMMARY
-          cat npm-audit-report.json | head -50 >> $GITHUB_STEP_SUMMARY
+          head -50 npm-audit-report.json 2>/dev/null >> $GITHUB_STEP_SUMMARY || echo '{}' >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Upload audit report
@@ -140,7 +140,7 @@ jobs:
         uses: github/codeql-action/analyze@v3
 
       - name: Run Semgrep
-        uses: semgrep/semgrep-action@v1
+        uses: semgrep/semgrep-action@v1.100.0
         with:
           config: >-
             p/security-audit
@@ -149,12 +149,6 @@ jobs:
             p/react-typescript
         env:
           SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
-
-      - name: Run Bandit (Python security scan)
-        if: contains(github.event.head_commit.modified, '.py')
-        uses: securecodewarrior/github-action-add-sarif@v1
-        with:
-          sarif-file: 'bandit-report.sarif'
 
   # License compliance check
   license-check:
@@ -284,14 +278,22 @@ jobs:
           echo "- Artifacts retained for 30-90 days" >> $GITHUB_STEP_SUMMARY
 
       - name: Create security issue if critical findings
-        if: contains(needs.*.result, 'failure') && github.event_name == 'push'
+        if: github.event_name == 'push'
         uses: actions/github-script@v7
         with:
           script: |
-            github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: '🚨 Security Scan Failures Detected',
-              body: 'Security scans have identified critical issues that need immediate attention. Please review the [workflow run](' + context.payload.repository.html_url + '/actions/runs/' + context.runId + ') for detailed findings.',
-              labels: ['security', 'critical', 'automated']
-            })
+            const results = [
+              '${{ needs.secret-scan.result }}',
+              '${{ needs.npm-audit.result }}',
+              '${{ needs.cargo-audit.result }}',
+              '${{ needs.sast-scan.result }}'
+            ];
+            if (results.some(r => r === 'failure')) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: 'Security Scan Failures Detected',
+                body: 'Security scans have identified critical issues that need immediate attention. Please review the [workflow run](' + context.payload.repository.html_url + '/actions/runs/' + context.runId + ') for detailed findings.',
+                labels: ['security', 'automated']
+              });
+            }

@@ -92,13 +92,13 @@ jobs:
             target: x86_64-pc-windows-msvc
             
           # macOS Intel
-          - os: macos-latest
+          - os: macos-13
             platform: macos
             arch: x64
             target: x86_64-apple-darwin
             
           # macOS Apple Silicon
-          - os: macos-13  # Use macos-13 for Intel, macos-14 for Apple Silicon
+          - os: macos-latest
             platform: macos
             arch: aarch64
             target: aarch64-apple-darwin
@@ -142,7 +142,7 @@ jobs:
         if: matrix.platform == 'linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
 
       - name: Install frontend dependencies
         run: npm ci
@@ -180,7 +180,7 @@ jobs:
           echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
           echo "| Platform | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|----------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Windows x64 | ${{ needs.build-matrix.outputs.windows-x64-result || 'N/A' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| macOS Intel | ${{ needs.build-matrix.outputs.macos-x64-result || 'N/A' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| macOS Apple Silicon | ${{ needs.build-matrix.outputs.macos-aarch64-result || 'N/A' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Linux x64 | ${{ needs.build-matrix.outputs.linux-x64-result || 'N/A' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Windows x64 | ${{ needs.build-matrix.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| macOS Intel | ${{ needs.build-matrix.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| macOS Apple Silicon | ${{ needs.build-matrix.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Linux x64 | ${{ needs.build-matrix.result }} |" >> $GITHUB_STEP_SUMMARY

@@ -73,14 +73,14 @@ jobs:
             bundle_formats: msi,nsis
             
           # macOS Intel
-          - os: macos-latest
+          - os: macos-13
             platform: macos
             arch: x64
             target: x86_64-apple-darwin
             bundle_formats: dmg,app
             
           # macOS Apple Silicon
-          - os: macos-13
+          - os: macos-latest
             platform: macos
             arch: aarch64
             target: aarch64-apple-darwin
@@ -126,7 +126,7 @@ jobs:
         if: matrix.platform == 'linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
 
       - name: Install frontend dependencies
         run: npm ci
@@ -136,12 +136,13 @@ jobs:
 
       - name: Create nightly version
         run: |
-          # Generate nightly version string
-          NIGHTLY_VERSION=$(date +%Y%m%d)-$(git rev-parse --short HEAD)
+          # Generate nightly version string (valid sempr)
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          NIGHTLY_VERSION="0.0.0-nightly.$(date +%Y%m%d).$SHORT_SHA"
           echo "NIGHTLY_VERSION=$NIGHTLY_VERSION" >> $GITHUB_ENV
           
           # Update version in package.json
-          npm version $NIGHTLY_VERSION --no-git-tag-version
+          npm version "$NIGHTLY_VERSION" --no-git-tag-version --allow-same-version
           
           # Update version in Cargo.toml
           cd src-tauri
@@ -156,6 +157,7 @@ jobs:
           args: '--target ${{ matrix.target }} --bundles ${{ matrix.bundle_formats }}'
 
       - name: Rename artifacts with nightly version
+        shell: bash
         run: |
           NIGHTLY_VERSION=${{ env.NIGHTLY_VERSION }}
           for file in src-tauri/target/${{ matrix.target }}/release/bundle/*; do
