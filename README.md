@@ -26,10 +26,17 @@ Dock is a desktop GUI for managing Docker containers, images, volumes, networks,
 
 ## Screenshots
 
-<!-- TODO: Add screenshots -->
+<!--
+  To add screenshots:
+  1. Create a screenshots/ directory at the repo root
+  2. Save your images as screenshots/containers.png, screenshots/terminal.png, etc.
+  3. Reference them like: ![Containers View](screenshots/containers.png)
+
+  GitHub will display them inline as long as the images are committed to the repo.
+-->
 | Containers View | Terminal Session | Stats Charts |
 |---|---|---|
-| _screenshot_ | _screenshot_ | _screenshot_ |
+| ![Containers View](screenshots/containers.png) | ![Terminal Session](screenshots/terminal.png) | ![Stats Charts](screenshots/stats.png) |
 
 ---
 
