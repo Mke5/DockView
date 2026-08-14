@@ -18,7 +18,14 @@ import {
 import { ViewHeader, StatusBadge, Modal, Field, Spinner } from '../shared/ui';
 import { useResizeXRight } from '../shared/useResize';
 import { isTauri } from '../../backend/utils';
-import { invoke } from '@tauri-apps/api/core';
+import { toStoreVolume } from '../../backend/bridge';
+import {
+  buildImage,
+  createVolume,
+  createNetwork,
+  removeVolume as removeVolumeBackend,
+  removeNetwork as removeNetworkBackend,
+} from '../../backend';
 
 // ─── Volumes ─────────────────────────────────────────────────────────────────
 
@@ -60,7 +67,7 @@ export function VolumesView() {
   async function handleRemove(v: Volume) {
     if (!confirm('Remove volume ' + v.name + '?')) return;
     try {
-      if (isTauri()) await invoke('volume_remove', { name: v.name });
+      if (isTauri()) await removeVolumeBackend(v.name);
     } catch {}
     removeVolume(v.id);
     if (selectedId === v.id) selectVolume(null);
@@ -373,21 +380,25 @@ function CreateVolumeModal({
       return;
     }
     try {
-      if (isTauri())
-        await invoke('volume_create', { name: name.trim(), driver });
-      onCreated({
-        id: 'vol-' + Date.now(),
-        name: name.trim(),
-        driver,
-        mountpoint: '/var/lib/docker/volumes/' + name.trim(),
-        size: '0 B',
-        sizeBytes: 0,
-        created: new Date().toISOString().slice(0, 10),
-        inUse: false,
-        containers: [],
-        scope: 'local',
-        labels: {},
-      });
+      let volume: Volume;
+      if (isTauri()) {
+        volume = toStoreVolume(await createVolume(name.trim(), driver));
+      } else {
+        volume = {
+          id: 'vol-' + name.trim(),
+          name: name.trim(),
+          driver,
+          mountpoint: '/var/lib/docker/volumes/' + name.trim(),
+          size: '0 B',
+          sizeBytes: 0,
+          created: new Date().toISOString().slice(0, 10),
+          inUse: false,
+          containers: [],
+          scope: 'local',
+          labels: {},
+        };
+      }
+      onCreated(volume);
       onClose();
     } catch (e: any) {
       setError(e?.message || String(e));
@@ -480,7 +491,7 @@ export function NetworksView() {
     }
     if (!confirm('Remove network ' + n.name + '?')) return;
     try {
-      if (isTauri()) await invoke('network_remove', { name: n.name });
+      if (isTauri()) await removeNetworkBackend(n.id);
     } catch {}
     removeNetwork(n.id);
     if (selectedId === n.id) selectNetwork(null);
@@ -727,26 +738,45 @@ function CreateNetworkModal({
       return;
     }
     try {
-      if (isTauri())
-        await invoke('network_create', {
+      let network: Network;
+      if (isTauri()) {
+        const id = await createNetwork({
           name: name.trim(),
           driver,
-          subnet: subnet.trim() || null,
+          subnet: subnet.trim() || undefined,
           internal,
+          attachable: true,
+          labels: {},
         });
-      onCreated({
-        id: 'net-' + Date.now(),
-        name: name.trim(),
-        driver,
-        subnet: subnet.trim() || undefined,
-        gateway: undefined,
-        created: new Date().toISOString().slice(0, 10),
-        containers: [],
-        isDefault: false,
-        internal,
-        enableIPv6: false,
-        scope: 'local',
-      });
+        network = {
+          id,
+          name: name.trim(),
+          driver,
+          subnet: subnet.trim() || undefined,
+          gateway: undefined,
+          created: new Date().toISOString().slice(0, 10),
+          containers: [],
+          isDefault: false,
+          internal,
+          enableIPv6: false,
+          scope: 'local',
+        };
+      } else {
+        network = {
+          id: 'net-' + Date.now(),
+          name: name.trim(),
+          driver,
+          subnet: subnet.trim() || undefined,
+          gateway: undefined,
+          created: new Date().toISOString().slice(0, 10),
+          containers: [],
+          isDefault: false,
+          internal,
+          enableIPv6: false,
+          scope: 'local',
+        };
+      }
+      onCreated(network);
       onClose();
     } catch (e: any) {
       setError(e?.message || String(e));
@@ -1163,7 +1193,7 @@ function NewBuildModal({
     setBuilding(true);
     try {
       if (isTauri())
-        await invoke('image_build', { tag: image.trim(), dockerfile, context });
+        await buildImage(image.trim(), dockerfile, context);
       onAdd({
         id: 'build-' + Date.now(),
         image: image.trim(),

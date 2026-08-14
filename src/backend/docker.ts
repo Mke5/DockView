@@ -210,6 +210,11 @@ export const pullImage = (image: string, tag?: string) =>
 export const removeImage = (id: string, force?: boolean) =>
   invoke<OkResponse>('remove_image', { id, force });
 export const pruneImages = () => invoke<PruneResult>('prune_images');
+export const buildImage = (
+  tag: string,
+  dockerfile: string,
+  context: string
+) => invoke<OkResponse>('image_build', { tag, dockerfile, context });
 
 // ─── VOLUMES ──────────────────────────────────────────────────────────────────
 

@@ -28,16 +28,57 @@ mod tests {
     }
 
     #[test]
-    fn cpu_percent_normal() {
-        let pct = dock_lib::docker::client::cpu_percent(1_000_000.0, 100_000_000.0, 4.0);
-        // Should be ~4 %
-        assert!((pct - 4.0).abs() < 0.01, "Expected ~4.0, got {}", pct);
+    fn stats_cpu_percent_normal() {
+        let stats = sample_stats(1_000_000, 100_000_000, 4);
+        let s = dock_lib::docker::models::bollard_stats_to_container_stats("abc123", &stats);
+        // (1M cpu delta / 100M system delta) * 4 cpus * 100 ≈ 4 %
+        assert!(
+            (s.cpu_percent - 4.0).abs() < 0.01,
+            "Expected ~4.0, got {}",
+            s.cpu_percent
+        );
     }
 
     #[test]
-    fn cpu_percent_zero_system_delta() {
-        let pct = dock_lib::docker::client::cpu_percent(0.0, 0.0, 4.0);
-        assert_eq!(pct, 0.0);
+    fn stats_cpu_percent_zero_deltas() {
+        let stats = sample_stats(0, 0, 4);
+        let s = dock_lib::docker::models::bollard_stats_to_container_stats("abc123", &stats);
+        assert_eq!(s.cpu_percent, 0.0);
+    }
+
+    fn sample_stats(cpu_usage: u64, system_cpu_usage: u64, online_cpus: u64) -> bollard::container::Stats {
+        serde_json::from_value(serde_json::json!({
+            "read": "2026-01-01T00:00:00Z",
+            "preread": "2026-01-01T00:00:00Z",
+            "num_procs": 0,
+            "pids_stats": { "current": 2 },
+            "cpu_stats": {
+                "cpu_usage": {
+                    "total_usage": cpu_usage,
+                    "usage_in_usermode": 0,
+                    "usage_in_kernelmode": 0
+                },
+                "system_cpu_usage": system_cpu_usage,
+                "online_cpus": online_cpus,
+                "throttling_data": { "periods": 0, "throttled_periods": 0, "throttled_time": 0 }
+            },
+            "precpu_stats": {
+                "cpu_usage": {
+                    "total_usage": 0,
+                    "usage_in_usermode": 0,
+                    "usage_in_kernelmode": 0
+                },
+                "system_cpu_usage": 0,
+                "online_cpus": 1,
+                "throttling_data": { "periods": 0, "throttled_periods": 0, "throttled_time": 0 }
+            },
+            "memory_stats": { "usage": 50_000_000, "limit": 200_000_000 },
+            "blkio_stats": {},
+            "storage_stats": {},
+            "name": "web",
+            "id": "abc123"
+        }))
+        .expect("valid stats json")
     }
 
     // ─── MODEL ───────────────────────────────────────────────────────────────

@@ -311,3 +311,5 @@ export const refreshImages = () => loadImages();
 export const refreshVolumes = () => loadVolumes();
 export const refreshNetworks = () => loadNetworks();
 export const refreshAll = () => loadAll();
+
+export { toStoreVolume };
