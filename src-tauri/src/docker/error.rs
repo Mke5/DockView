@@ -44,4 +44,3 @@ impl DockerError {
         Self::Prune(op.into(), anyhow::anyhow!("{}", msg))
     }
 }
-

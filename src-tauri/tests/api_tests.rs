@@ -46,7 +46,11 @@ mod tests {
         assert_eq!(s.cpu_percent, 0.0);
     }
 
-    fn sample_stats(cpu_usage: u64, system_cpu_usage: u64, online_cpus: u64) -> bollard::container::Stats {
+    fn sample_stats(
+        cpu_usage: u64,
+        system_cpu_usage: u64,
+        online_cpus: u64,
+    ) -> bollard::container::Stats {
         serde_json::from_value(serde_json::json!({
             "read": "2026-01-01T00:00:00Z",
             "preread": "2026-01-01T00:00:00Z",
@@ -87,17 +91,23 @@ mod tests {
     fn container_status_from_str() {
         use dock_lib::docker::models::ContainerStatus;
         assert_eq!(
-            ContainerStatus::from_str("running"),
+            ContainerStatus::from_status("running"),
             ContainerStatus::Running
         );
-        assert_eq!(ContainerStatus::from_str("paused"), ContainerStatus::Paused);
-        assert_eq!(ContainerStatus::from_str("exited"), ContainerStatus::Exited);
         assert_eq!(
-            ContainerStatus::from_str("restarting"),
+            ContainerStatus::from_status("paused"),
+            ContainerStatus::Paused
+        );
+        assert_eq!(
+            ContainerStatus::from_status("exited"),
+            ContainerStatus::Exited
+        );
+        assert_eq!(
+            ContainerStatus::from_status("restarting"),
             ContainerStatus::Restarting
         );
         assert_eq!(
-            ContainerStatus::from_str("unknown"),
+            ContainerStatus::from_status("unknown"),
             ContainerStatus::Stopped
         );
     }

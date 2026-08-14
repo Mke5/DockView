@@ -93,7 +93,7 @@ impl<'a> ImageOps<'a> {
                     .repo_digests
                     .into_iter()
                     .next()
-                    .unwrap_or_else(|| format!("sha256:{}", &short_id));
+                    .unwrap_or_else(|| format!("sha256:{}", short_id));
 
                 let size = img.size as u64;
                 let in_use = in_use_ids.contains(&id)

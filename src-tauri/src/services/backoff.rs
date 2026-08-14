@@ -9,11 +9,17 @@ pub struct ConnectionBackoff {
     current: Duration,
 }
 
-impl ConnectionBackoff {
-    pub fn new() -> Self {
+impl Default for ConnectionBackoff {
+    fn default() -> Self {
         Self {
             current: INITIAL_DELAY,
         }
+    }
+}
+
+impl ConnectionBackoff {
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// Return the current delay, then double it (capped at [`MAX_DELAY`]).

@@ -3,11 +3,7 @@ use crate::services::backoff::ConnectionBackoff;
 use crate::state::AppState;
 use bollard::container::StatsOptions;
 use futures_util::StreamExt;
-use std::{
-    collections::HashMap,
-    sync::Arc,
-    time::Duration,
-};
+use std::{collections::HashMap, sync::Arc, time::Duration};
 use tauri::{AppHandle, Emitter};
 
 const BATCH_INTERVAL: Duration = Duration::from_secs(2);
@@ -21,8 +17,10 @@ const MAX_STATS_BUFFER: usize = 500;
 /// so that when the daemon is unreachable the collector doesn't busy-loop.
 pub fn spawn(app: AppHandle, state: Arc<AppState>) {
     tauri::async_runtime::spawn(async move {
-        let (stats_tx, mut stats_rx) =
-            tokio::sync::mpsc::channel::<(String, crate::docker::models::ContainerStats)>(MAX_STATS_BUFFER);
+        let (stats_tx, mut stats_rx) = tokio::sync::mpsc::channel::<(
+            String,
+            crate::docker::models::ContainerStats,
+        )>(MAX_STATS_BUFFER);
         let mut stream_handles: HashMap<String, tokio::task::JoinHandle<()>> = HashMap::new();
         let mut latest: HashMap<String, crate::docker::models::ContainerStats> = HashMap::new();
         let mut backoff = ConnectionBackoff::new();

@@ -49,8 +49,8 @@ impl<'a> NetworkOps<'a> {
                 let containers: Vec<NetworkContainer> = n
                     .containers
                     .unwrap_or_default()
-                    .into_iter()
-                    .map(|(_, c)| NetworkContainer {
+                    .into_values()
+                    .map(|c| NetworkContainer {
                         name: c.name.unwrap_or_default(),
                         ip: c
                             .ipv4_address

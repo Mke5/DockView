@@ -37,11 +37,8 @@ pub async fn docker_reconnect(state: State<'_, AppState>) -> CmdResult<bool> {
 #[tauri::command]
 pub async fn docker_system_info(state: State<'_, AppState>) -> CmdResult<SystemInfo> {
     let docker = state.docker.get().await.map_err(CommandError::from)?;
-    let (info, version) = tokio::try_join!(
-        docker.info(),
-        docker.version(),
-    )
-    .map_err(|e| CommandError::new(e.to_string()))?;
+    let (info, version) = tokio::try_join!(docker.info(), docker.version(),)
+        .map_err(|e| CommandError::new(e.to_string()))?;
 
     Ok(SystemInfo {
         docker_version: info.server_version.clone().unwrap_or_default(),
@@ -198,11 +195,11 @@ pub async fn kill_container(
     state: State<'_, AppState>,
 ) -> CmdResult<OkResponse> {
     let ops = ContainerOps::new(&state.docker);
-    map_err(ops.kill(&id, &signal.unwrap_or_else(|| "SIGKILL".into())).await)?;
-    Ok(OkResponse::with_message(format!(
-        "Container {} killed",
-        id
-    )))
+    map_err(
+        ops.kill(&id, &signal.unwrap_or_else(|| "SIGKILL".into()))
+            .await,
+    )?;
+    Ok(OkResponse::with_message(format!("Container {} killed", id)))
 }
 
 #[tauri::command]
@@ -413,16 +410,23 @@ pub async fn disconnect_container_from_network(
 // ─── COMPOSE ─────────────────────────────────────────────────────────────────
 
 #[tauri::command]
-pub async fn compose_up(
-    project_dir: String,
-) -> CmdResult<OkResponse> {
+pub async fn compose_up(project_dir: String) -> CmdResult<OkResponse> {
     use std::process::Command;
     let output = Command::new("docker")
-        .args(["compose", "-f", &format!("{}/docker-compose.yml", project_dir), "up", "-d"])
+        .args([
+            "compose",
+            "-f",
+            &format!("{}/docker-compose.yml", project_dir),
+            "up",
+            "-d",
+        ])
         .output()
-        .map_err(|e| CommandError::from(e))?;
+        .map_err(CommandError::from)?;
     if output.status.success() {
-        Ok(OkResponse { ok: true, message: Some("Stack started".into()) })
+        Ok(OkResponse {
+            ok: true,
+            message: Some("Stack started".into()),
+        })
     } else {
         let stderr = String::from_utf8_lossy(&output.stderr).to_string();
         Err(stderr.into())
@@ -430,16 +434,22 @@ pub async fn compose_up(
 }
 
 #[tauri::command]
-pub async fn compose_down(
-    project_dir: String,
-) -> CmdResult<OkResponse> {
+pub async fn compose_down(project_dir: String) -> CmdResult<OkResponse> {
     use std::process::Command;
     let output = Command::new("docker")
-        .args(["compose", "-f", &format!("{}/docker-compose.yml", project_dir), "down"])
+        .args([
+            "compose",
+            "-f",
+            &format!("{}/docker-compose.yml", project_dir),
+            "down",
+        ])
         .output()
         .map_err(|e| CommandError::new(format!("Failed to run compose down: {}", e)))?;
     if output.status.success() {
-        Ok(OkResponse { ok: true, message: Some("Stack stopped".into()) })
+        Ok(OkResponse {
+            ok: true,
+            message: Some("Stack stopped".into()),
+        })
     } else {
         let stderr = String::from_utf8_lossy(&output.stderr).to_string();
         Err(stderr.into())
@@ -460,7 +470,10 @@ pub async fn image_build(
         .output()
         .map_err(|e| CommandError::new(format!("Failed to build image: {}", e)))?;
     if output.status.success() {
-        Ok(OkResponse { ok: true, message: Some(format!("Built {}", tag)) })
+        Ok(OkResponse {
+            ok: true,
+            message: Some(format!("Built {}", tag)),
+        })
     } else {
         let stderr = String::from_utf8_lossy(&output.stderr).to_string();
         Err(stderr.into())
@@ -470,10 +483,7 @@ pub async fn image_build(
 // ─── PUSH ─────────────────────────────────────────────────────────────────────
 
 #[tauri::command]
-pub async fn image_push(
-    image: String,
-    destination: String,
-) -> CmdResult<OkResponse> {
+pub async fn image_push(image: String, destination: String) -> CmdResult<OkResponse> {
     use std::process::Command;
     // Tag if different
     if image != destination {
@@ -491,7 +501,10 @@ pub async fn image_push(
         .output()
         .map_err(|e| CommandError::new(format!("Failed to push image: {}", e)))?;
     if output.status.success() {
-        Ok(OkResponse { ok: true, message: Some(format!("Pushed {}", destination)) })
+        Ok(OkResponse {
+            ok: true,
+            message: Some(format!("Pushed {}", destination)),
+        })
     } else {
         let stderr = String::from_utf8_lossy(&output.stderr).to_string();
         Err(stderr.into())
@@ -540,8 +553,7 @@ pub async fn registry_login(
     }
 
     // Store in OS keychain
-    crate::docker::credentials::save(&registry, &username, &password)
-        .map_err(CommandError::new)?;
+    crate::docker::credentials::save(&registry, &username, &password).map_err(CommandError::new)?;
 
     Ok(OkResponse {
         ok: true,
@@ -559,21 +571,20 @@ pub async fn registry_logout(registry: String) -> CmdResult<OkResponse> {
 }
 
 #[tauri::command]
-pub async fn registry_list_credentials() -> CmdResult<Vec<crate::docker::credentials::StoredCredential>> {
+pub async fn registry_list_credentials(
+) -> CmdResult<Vec<crate::docker::credentials::StoredCredential>> {
     // Read stored registries from Docker config
     let ctx = crate::docker::context::read_config().await;
     let creds = ctx
         .auths
         .into_iter()
         .filter_map(|r| {
-            crate::docker::credentials::get(&r)
-                .ok()
-                .or_else(|| {
-                    Some(crate::docker::credentials::StoredCredential {
-                        username: String::new(),
-                        registry: r,
-                    })
+            crate::docker::credentials::get(&r).ok().or_else(|| {
+                Some(crate::docker::credentials::StoredCredential {
+                    username: String::new(),
+                    registry: r,
                 })
+            })
         })
         .collect();
     Ok(creds)

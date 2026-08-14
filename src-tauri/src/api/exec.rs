@@ -89,7 +89,11 @@ pub async fn exec_session_start(
         shell: shell.clone(),
         read_handles: vec![stdout_handle, stderr_handle],
     };
-    state.exec_sessions.lock().await.insert(session_id.clone(), session);
+    state
+        .exec_sessions
+        .lock()
+        .await
+        .insert(session_id.clone(), session);
 
     Ok(session_id)
 }
@@ -150,10 +154,7 @@ pub async fn exec_session_resize(
 
 /// Stop and remove an exec session.
 #[tauri::command]
-pub async fn exec_session_stop(
-    session_id: String,
-    state: State<'_, AppState>,
-) -> CmdResult<()> {
+pub async fn exec_session_stop(session_id: String, state: State<'_, AppState>) -> CmdResult<()> {
     let mut sessions = state.exec_sessions.lock().await;
     if let Some(mut session) = sessions.remove(&session_id) {
         // Abort read tasks first to prevent use-after-close

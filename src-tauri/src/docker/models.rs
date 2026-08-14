@@ -4,17 +4,20 @@ use std::collections::HashMap;
 /// Convert a raw Bollard [`bollard::models::Stats`] into our portable
 /// [`ContainerStats`].  This function is shared by the one-shot stats
 /// endpoint and the streaming background collector.
-pub fn bollard_stats_to_container_stats(id: &str, raw: &bollard::container::Stats) -> ContainerStats {
+pub fn bollard_stats_to_container_stats(
+    id: &str,
+    raw: &bollard::container::Stats,
+) -> ContainerStats {
     let cpu_delta = raw
         .cpu_stats
         .cpu_usage
         .total_usage
         .saturating_sub(raw.precpu_stats.cpu_usage.total_usage) as f64;
-    let system_delta = raw
-        .cpu_stats
-        .system_cpu_usage
-        .unwrap_or(0)
-        .saturating_sub(raw.precpu_stats.system_cpu_usage.unwrap_or(0)) as f64;
+    let system_delta =
+        raw.cpu_stats
+            .system_cpu_usage
+            .unwrap_or(0)
+            .saturating_sub(raw.precpu_stats.system_cpu_usage.unwrap_or(0)) as f64;
     let num_cpus = raw.cpu_stats.online_cpus.unwrap_or(1) as f64;
     let cpu = if system_delta > 0.0 && cpu_delta > 0.0 {
         (cpu_delta / system_delta) * num_cpus * 100.0
@@ -35,7 +38,7 @@ pub fn bollard_stats_to_container_stats(id: &str, raw: &bollard::container::Stat
         .as_ref()
         .map(|nets| {
             nets.values().fold((0u64, 0u64), |(rx, tx), n| {
-                (rx + n.rx_bytes as u64, tx + n.tx_bytes as u64)
+                (rx + n.rx_bytes, tx + n.tx_bytes)
             })
         })
         .unwrap_or((0, 0));
@@ -47,7 +50,7 @@ pub fn bollard_stats_to_container_stats(id: &str, raw: &bollard::container::Stat
         .map(|entries| {
             entries.iter().fold((0u64, 0u64), |(r, w), e| {
                 let op = e.op.to_lowercase();
-                let val = e.value as u64;
+                let val = e.value;
                 match op.as_str() {
                     "read" => (r + val, w),
                     "write" => (r, w + val),
@@ -106,7 +109,7 @@ pub enum ContainerStatus {
 }
 
 impl ContainerStatus {
-    pub fn from_str(s: &str) -> Self {
+    pub fn from_status(s: &str) -> Self {
         match s.to_lowercase().as_str() {
             "running" => Self::Running,
             "paused" => Self::Paused,

@@ -1,7 +1,6 @@
 /// Integration tests that require a live Docker daemon.
 /// Run with: `cargo test --test docker_integration -- --ignored`
 /// (They are marked `#[ignore]` so CI without Docker skips them.)
-
 #[cfg(test)]
 mod integration {
     use dock_lib::docker::client::DockerClient;
@@ -10,10 +9,7 @@ mod integration {
 
     /// Helper — connect to Docker or skip the test.
     async fn docker() -> Option<DockerClient> {
-        match DockerClient::new().await {
-            Ok(c) => Some(c),
-            Err(_) => None,
-        }
+        DockerClient::new().await.ok()
     }
 
     #[tokio::test]

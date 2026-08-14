@@ -1,8 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::{
-    collections::HashMap,
-    path::PathBuf,
-};
+use std::{collections::HashMap, path::PathBuf};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -26,7 +23,7 @@ struct DockerConfig {
 /// Read the Docker CLI config (~/.docker/config.json) and return the
 /// current context, available contexts, and credential store info.
 pub async fn read_config() -> DockerContext {
-    tokio::task::spawn_blocking(|| read_config_sync())
+    tokio::task::spawn_blocking(read_config_sync)
         .await
         .unwrap_or_default()
 }
@@ -34,8 +31,9 @@ pub async fn read_config() -> DockerContext {
 fn home_dir() -> String {
     #[cfg(target_os = "windows")]
     {
-        std::env::var("USERPROFILE")
-            .unwrap_or_else(|_| std::env::var("HOME").unwrap_or_else(|_| "C:\\Users\\Default".into()))
+        std::env::var("USERPROFILE").unwrap_or_else(|_| {
+            std::env::var("HOME").unwrap_or_else(|_| "C:\\Users\\Default".into())
+        })
     }
     #[cfg(not(target_os = "windows"))]
     {
@@ -44,7 +42,9 @@ fn home_dir() -> String {
 }
 
 fn config_path() -> PathBuf {
-    PathBuf::from(home_dir()).join(".docker").join("config.json")
+    PathBuf::from(home_dir())
+        .join(".docker")
+        .join("config.json")
 }
 
 fn read_config_sync() -> DockerContext {
@@ -86,7 +86,10 @@ fn read_config_sync() -> DockerContext {
 
 /// Scan the Docker contexts directory for available context names.
 fn list_context_dirs() -> Vec<String> {
-    let meta_dir = PathBuf::from(home_dir()).join(".docker").join("contexts").join("meta");
+    let meta_dir = PathBuf::from(home_dir())
+        .join(".docker")
+        .join("contexts")
+        .join("meta");
 
     let mut contexts = vec!["default".to_string()];
     if let Ok(entries) = std::fs::read_dir(&meta_dir) {

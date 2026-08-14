@@ -59,7 +59,7 @@ impl<'a> ContainerOps<'a> {
                 let image = c.image.unwrap_or_default();
                 let state = c.state.clone().unwrap_or_default();
                 let status_str = c.status.unwrap_or_default();
-                let status = ContainerStatus::from_str(&state);
+                let status = ContainerStatus::from_status(&state);
 
                 let ports = c
                     .ports
@@ -140,12 +140,10 @@ impl<'a> ContainerOps<'a> {
                         bindings
                             .iter()
                             .flatten()
-                            .filter_map(move |b| {
-                                Some(PortMapping {
-                                    host_port: b.host_port.clone().unwrap_or_default(),
-                                    container_port: cp.clone(),
-                                    protocol: proto.clone(),
-                                })
+                            .map(|b| PortMapping {
+                                host_port: b.host_port.clone().unwrap_or_default(),
+                                container_port: cp.clone(),
+                                protocol: proto.clone(),
                             })
                             .collect::<Vec<_>>()
                     })
@@ -201,7 +199,7 @@ impl<'a> ContainerOps<'a> {
                 .to_string(),
             image: config.and_then(|c| c.image.clone()).unwrap_or_default(),
             image_id: raw.image.unwrap_or_default(),
-            status: ContainerStatus::from_str(&status_str),
+            status: ContainerStatus::from_status(&status_str),
             created: raw.created.unwrap_or_default(),
             started_at: state.and_then(|s| s.started_at.clone()).unwrap_or_default(),
             finished_at: state
@@ -249,7 +247,9 @@ impl<'a> ContainerOps<'a> {
 
     pub async fn restart(&self, id: &str, timeout: i64) -> Result<()> {
         let docker = self.client.get().await?;
-        let opts = RestartContainerOptions { t: timeout as isize };
+        let opts = RestartContainerOptions {
+            t: timeout as isize,
+        };
         docker
             .restart_container(id, Some(opts))
             .await

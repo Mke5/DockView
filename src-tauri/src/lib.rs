@@ -32,15 +32,14 @@ pub fn run() {
 
             let handle = app.handle().clone();
             let state = tauri::async_runtime::block_on(async {
-                tokio::time::timeout(
-                    std::time::Duration::from_secs(5),
-                    AppState::new(),
-                )
-                .await
-                .unwrap_or_else(|_| {
-                    tracing::warn!("Docker connection timed out during startup, starting disconnected");
-                    AppState::new_disconnected()
-                })
+                tokio::time::timeout(std::time::Duration::from_secs(5), AppState::new())
+                    .await
+                    .unwrap_or_else(|_| {
+                        tracing::warn!(
+                            "Docker connection timed out during startup, starting disconnected"
+                        );
+                        AppState::new_disconnected()
+                    })
             });
             let state_arc = Arc::new(state);
 
