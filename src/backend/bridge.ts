@@ -187,7 +187,7 @@ function handleDockerEvent(event: DockerEvent) {
       case 'rename':
       case 'create':
       case 'destroy':
-        loadContainers();
+        void loadContainers();
         break;
     }
   }
@@ -199,20 +199,20 @@ function handleDockerEvent(event: DockerEvent) {
       case 'delete':
       case 'tag':
       case 'untag':
-        loadImages();
-        loadContainers(); // inUse flags need refresh too
+        void loadImages();
+        void loadContainers(); // inUse flags need refresh too
         break;
     }
   }
 
   // Volume events
   if (eventType === 'volume') {
-    loadVolumes();
+    void loadVolumes();
   }
 
   // Network events
   if (eventType === 'network') {
-    loadNetworks();
+    void loadNetworks();
   }
 }
 
@@ -269,7 +269,7 @@ export async function initDockerBridge(): Promise<void> {
     console.warn('[bridge] Docker daemon unreachable — retrying in 5s');
     setTimeout(() => {
       _initialised = false;
-      initDockerBridge();
+      void initDockerBridge();
     }, 5000);
     return;
   }

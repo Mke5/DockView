@@ -142,8 +142,8 @@ export default function ImagesView() {
       if (isTauri()) await removeImage(img.id, true);
       removeFromStore(img.id);
       if (selectedId === img.id) selectImage(null);
-    } catch (e: any) {
-      alert(e?.message || String(e));
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : String(e));
     }
   }
 
@@ -350,7 +350,7 @@ export default function ImagesView() {
                         className="btn-icon"
                         title="Remove"
                         style={{ color: 'var(--red)' }}
-                        onClick={() => handleRemove(img)}
+                        onClick={() => void handleRemove(img)}
                       >
                         ✕
                       </button>
@@ -483,7 +483,7 @@ export default function ImagesView() {
                   <button
                     className="btn btn-danger"
                     style={{ justifyContent: 'center' }}
-                    onClick={() => handleRemove(selected)}
+                    onClick={() => void handleRemove(selected)}
                   >
                     ✕ Remove
                   </button>
@@ -494,11 +494,7 @@ export default function ImagesView() {
         )}
       </div>
 
-      {showPullModal && (
-        <PullModal
-          onClose={() => setShowPullModal(false)}
-        />
-      )}
+      {showPullModal && <PullModal onClose={() => setShowPullModal(false)} />}
       {showPushModal && (
         <PushModal
           image={showPushModal}
@@ -517,7 +513,7 @@ export default function ImagesView() {
               </button>
               <button
                 className="btn btn-danger"
-                onClick={handlePrune}
+                onClick={() => void handlePrune()}
                 disabled={pruning}
               >
                 {pruning ? (
@@ -550,11 +546,7 @@ export default function ImagesView() {
   );
 }
 
-function PullModal({
-  onClose,
-}: {
-  onClose: () => void;
-}) {
+function PullModal({ onClose }: { onClose: () => void }) {
   const [query, setQuery] = useState('');
   const [tag, setTag] = useState('latest');
   const [selected, setSelected] = useState('');
@@ -603,8 +595,8 @@ function PullModal({
           setProgress(p);
           setStep(chunk.status || 'Downloading…');
         });
-      } catch (e: any) {
-        setError(e?.message || String(e));
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : String(e));
         setPulling(false);
       }
     } else {
@@ -646,7 +638,7 @@ function PullModal({
             </button>
             <button
               className="btn btn-primary"
-              onClick={handlePull}
+              onClick={() => void handlePull()}
               disabled={!imageName.trim() || pulling}
             >
               {pulling ? (
@@ -830,7 +822,7 @@ function PushModal({
   const [progress, setProgress] = useState(0);
   const [done, setDone] = useState(false);
 
-  async function handlePush() {
+  function handlePush() {
     setPushing(true);
     // Simulate push progress (real push would use a streaming invoke)
     let p = 0;

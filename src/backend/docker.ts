@@ -210,11 +210,8 @@ export const pullImage = (image: string, tag?: string) =>
 export const removeImage = (id: string, force?: boolean) =>
   invoke<OkResponse>('remove_image', { id, force });
 export const pruneImages = () => invoke<PruneResult>('prune_images');
-export const buildImage = (
-  tag: string,
-  dockerfile: string,
-  context: string
-) => invoke<OkResponse>('image_build', { tag, dockerfile, context });
+export const buildImage = (tag: string, dockerfile: string, context: string) =>
+  invoke<OkResponse>('image_build', { tag, dockerfile, context });
 
 // ─── VOLUMES ──────────────────────────────────────────────────────────────────
 
@@ -343,7 +340,7 @@ export async function streamContainerLogs(
   const channel = new Channel<LogChunk>();
   channel.onmessage = onChunk;
 
-  invoke('stream_container_logs', {
+  await invoke('stream_container_logs', {
     id,
     tail: options?.tail,
     follow: options?.follow ?? true,
@@ -372,7 +369,9 @@ export async function pullImageStream(
   const channel = new Channel<PullProgressChunk>();
   channel.onmessage = onProgress;
 
-  invoke('pull_image_stream', { image, tag, channel }).catch(console.error);
+  await invoke('pull_image_stream', { image, tag, channel }).catch(
+    console.error
+  );
 
   return () => {
     channel.onmessage = () => {};
@@ -455,9 +454,7 @@ export async function execSessionResize(
 }
 
 /** Stop and clean up an exec session. */
-export async function execSessionStop(
-  sessionId: string
-): Promise<void> {
+export async function execSessionStop(sessionId: string): Promise<void> {
   return invoke('exec_session_stop', { sessionId });
 }
 

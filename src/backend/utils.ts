@@ -69,7 +69,9 @@ export function poll(
   intervalMs: number,
   fn: () => void | Promise<void>
 ): () => void {
-  fn(); // immediate first call
-  const id = setInterval(fn, intervalMs);
+  void fn(); // immediate first call
+  const id = setInterval(() => {
+    void fn();
+  }, intervalMs);
   return () => clearInterval(id);
 }

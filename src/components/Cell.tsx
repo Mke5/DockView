@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 export function Cell({
   style,
@@ -10,7 +10,7 @@ export function Cell({
   children: React.ReactNode;
 }) {
   return (
-    <td style={{ fontSize: 12, verticalAlign: "middle", ...style }}>
+    <td style={{ fontSize: 12, verticalAlign: 'middle', ...style }}>
       {children}
     </td>
   );

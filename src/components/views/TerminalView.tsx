@@ -38,7 +38,9 @@ function loadPersisted(): TerminalTab[] {
 function savePersisted(tabs: TerminalTab[]) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(tabs));
-  } catch {}
+  } catch {
+    /* storage unavailable — ignore */
+  }
 }
 
 export default function TerminalView() {
@@ -50,7 +52,9 @@ export default function TerminalView() {
   const [connecting, setConnecting] = useState(false);
   const [containerId, setContainerId] = useState('');
   const [shell, setShell] = useState('/bin/sh');
-  const [persistedTabs, setPersistedTabs] = useState<TerminalTab[]>(() => loadPersisted());
+  const [persistedTabs, setPersistedTabs] = useState<TerminalTab[]>(() =>
+    loadPersisted()
+  );
   const [showHistory, setShowHistory] = useState(false);
 
   const { containers } = useContainerStore();
@@ -76,7 +80,9 @@ export default function TerminalView() {
     savePersisted(tabs.filter((t) => t.history.length > 0));
   }, [tabs]);
 
-  const activeSessionId = activeTabId ? sessionMapRef.current.get(activeTabId) ?? null : null;
+  const activeSessionId = activeTabId
+    ? (sessionMapRef.current.get(activeTabId) ?? null)
+    : null;
 
   // Initialize xterm.js once
   useEffect(() => {
@@ -128,6 +134,8 @@ export default function TerminalView() {
       termRef.current = null;
       fitAddonRef.current = null;
     };
+    // Mount-only init: term.onData intentionally captures the session id at mount time.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Update xterm font size when changed
@@ -154,7 +162,8 @@ export default function TerminalView() {
             : line.type === 'system'
               ? '\r\n\x1b[33m'
               : '\r\n';
-      const suffix = line.type === 'error' || line.type === 'system' ? '\x1b[0m' : '';
+      const suffix =
+        line.type === 'error' || line.type === 'system' ? '\x1b[0m' : '';
       term.writeln(prefix + line.content + suffix);
     }
   }, [activeTabId, tabs]);
@@ -195,8 +204,9 @@ export default function TerminalView() {
 
       pushLine(tab.id, { type: 'system', content: `Connected via ${shell}` });
       termRef.current?.writeln('\r\n\x1b[32mConnected\x1b[0m via ' + shell);
-    } catch (e: any) {
-      termRef.current?.writeln('\r\n\x1b[31mError:\x1b[0m ' + (e?.message || String(e)));
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      termRef.current?.writeln('\r\n\x1b[31mError:\x1b[0m ' + msg);
     } finally {
       setConnecting(false);
     }
@@ -209,7 +219,9 @@ export default function TerminalView() {
       sessionMapRef.current.delete(activeTabId);
       try {
         await execSessionStop(sid);
-      } catch {}
+      } catch {
+        /* already gone — ignore */
+      }
     }
     pushLine(activeTabId, { type: 'system', content: 'Disconnected' });
     termRef.current?.writeln('\r\n\x1b[33mDisconnected\x1b[0m');
@@ -246,8 +258,18 @@ export default function TerminalView() {
   const activeTab = tabs.find((t) => t.id === activeTabId);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
-      <ViewHeader title="Terminal" subtitle="Execute commands inside containers" />
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        overflow: 'hidden',
+      }}
+    >
+      <ViewHeader
+        title="Terminal"
+        subtitle="Execute commands inside containers"
+      />
 
       {/* Tab bar */}
       {tabs.length > 0 && (
@@ -281,7 +303,14 @@ export default function TerminalView() {
             >
               <span style={{ flex: 1 }}>{tab.label}</span>
               {tab.connected && (
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--green)' }} />
+                <span
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: '50%',
+                    background: 'var(--green)',
+                  }}
+                />
               )}
               <span
                 onClick={(e) => {
@@ -309,7 +338,8 @@ export default function TerminalView() {
           <option value="">Select a running container…</option>
           {running.map((c) => (
             <option key={c.id} value={c.id}>
-              {c.name} ({c.image?.split('/').pop()?.split(':')[0] ?? c.id.slice(0, 12)})
+              {c.name} (
+              {c.image?.split('/').pop()?.split(':')[0] ?? c.id.slice(0, 12)})
             </option>
           ))}
         </select>
@@ -328,7 +358,9 @@ export default function TerminalView() {
           onChange={(e) => setFontSize(Number(e.target.value))}
         >
           {[10, 11, 12, 13, 14, 15, 16, 18, 20].map((s) => (
-            <option key={s} value={s}>{s}</option>
+            <option key={s} value={s}>
+              {s}
+            </option>
           ))}
         </select>
         {!isTauri() && (
@@ -338,22 +370,31 @@ export default function TerminalView() {
         )}
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
           {persistedTabs.length > 0 && (
-            <button className="btn" onClick={() => setShowHistory(!showHistory)}>
+            <button
+              className="btn"
+              onClick={() => setShowHistory(!showHistory)}
+            >
               History ({persistedTabs.length})
             </button>
           )}
           {activeSessionId ? (
-            <button className="btn btn-danger" onClick={handleDisconnect}>
+            <button
+              className="btn btn-danger"
+              onClick={() => void handleDisconnect()}
+            >
               Disconnect
             </button>
           ) : activeTab && !activeTab.connected ? (
-            <button className="btn" onClick={() => addTab({ ...activeTab, connected: true })}>
+            <button
+              className="btn"
+              onClick={() => addTab({ ...activeTab, connected: true })}
+            >
               Reconnect
             </button>
           ) : (
             <button
               className="btn btn-primary"
-              onClick={handleConnect}
+              onClick={() => void handleConnect()}
               disabled={!containerId || connecting || !isTauri()}
             >
               {connecting ? 'Connecting…' : 'Connect'}
@@ -379,7 +420,15 @@ export default function TerminalView() {
             flexShrink: 0,
           }}
         >
-          <div style={{ padding: '6px 10px', fontSize: 10, fontWeight: 600, color: 'var(--text-2)', textTransform: 'uppercase' }}>
+          <div
+            style={{
+              padding: '6px 10px',
+              fontSize: 10,
+              fontWeight: 600,
+              color: 'var(--text-2)',
+              textTransform: 'uppercase',
+            }}
+          >
             Previous Sessions
           </div>
           {persistedTabs.map((tab) => (
@@ -396,10 +445,18 @@ export default function TerminalView() {
               <span style={{ flex: 1 }}>
                 {tab.label} — {tab.history.length} lines
               </span>
-              <button className="btn" style={{ fontSize: 10 }} onClick={() => handleReplay(tab)}>
+              <button
+                className="btn"
+                style={{ fontSize: 10 }}
+                onClick={() => handleReplay(tab)}
+              >
                 Replay
               </button>
-              <button className="btn" style={{ fontSize: 10 }} onClick={() => handleDeletePersisted(tab.id)}>
+              <button
+                className="btn"
+                style={{ fontSize: 10 }}
+                onClick={() => handleDeletePersisted(tab.id)}
+              >
                 Delete
               </button>
             </div>

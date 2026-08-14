@@ -243,7 +243,7 @@ export default function RegistryView() {
                 </div>
                 <button
                   className="btn btn-primary"
-                  onClick={() => handleConnect(activeAccount.id)}
+                  onClick={() => void handleConnect(activeAccount.id)}
                 >
                   {connectingId === activeAccount.id ? (
                     <>
@@ -625,8 +625,8 @@ function AddRegistryModal({
         isDefault: false,
       });
       onClose();
-    } catch (e: any) {
-      setError(e?.message || String(e));
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
       setConnecting(false);
     }
   }
@@ -643,7 +643,7 @@ function AddRegistryModal({
           </button>
           <button
             className="btn btn-primary"
-            onClick={handleConnect}
+            onClick={() => void handleConnect()}
             disabled={connecting}
           >
             {connecting ? (
@@ -764,8 +764,8 @@ function PushImageModal({
           setPushing(false);
         }
       }, 180);
-    } catch (e: any) {
-      setError(e?.message || String(e));
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
       setPushing(false);
     }
   }
@@ -787,7 +787,7 @@ function PushImageModal({
             </button>
             <button
               className="btn btn-primary"
-              onClick={handlePush}
+              onClick={() => void handlePush()}
               disabled={pushing}
             >
               {pushing ? (
@@ -990,8 +990,8 @@ function PullRepoModal({
           }
         }, 140);
       }
-    } catch (e: any) {
-      setError(e?.message || String(e));
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
       setPulling(false);
     }
   }
@@ -1013,7 +1013,7 @@ function PullRepoModal({
             </button>
             <button
               className="btn btn-primary"
-              onClick={handlePull}
+              onClick={() => void handlePull()}
               disabled={pulling}
             >
               {pulling ? (

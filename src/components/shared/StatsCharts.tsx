@@ -1,5 +1,11 @@
 import {
-  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
 } from 'recharts';
 import { StatsPoint } from '../../hooks/useStatsHistory';
 
@@ -23,38 +29,77 @@ interface MiniChartProps {
   formatter?: (v: number) => string;
 }
 
-function MiniChart({ data, dataKey, color, unit, label, formatter }: MiniChartProps) {
+function MiniChart({
+  data,
+  dataKey,
+  color,
+  unit,
+  label,
+  formatter,
+}: MiniChartProps) {
   if (data.length < 2) {
     const val = data.length === 1 ? data[0][dataKey] : 0;
     return (
       <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 10, color: 'var(--text-2)', marginBottom: 4, fontWeight: 600 }}>{label}</div>
-        <div className="mono" style={{ fontSize: 18, fontWeight: 600, color }}>
-          {formatter ? formatter(Number(val)) : Number(val).toFixed(1)}{unit}
+        <div
+          style={{
+            fontSize: 10,
+            color: 'var(--text-2)',
+            marginBottom: 4,
+            fontWeight: 600,
+          }}
+        >
+          {label}
         </div>
-        <div style={{ fontSize: 9.5, color: 'var(--text-2)', marginTop: 2 }}>Collecting data…</div>
+        <div className="mono" style={{ fontSize: 18, fontWeight: 600, color }}>
+          {formatter ? formatter(Number(val)) : Number(val).toFixed(1)}
+          {unit}
+        </div>
+        <div style={{ fontSize: 9.5, color: 'var(--text-2)', marginTop: 2 }}>
+          Collecting data…
+        </div>
       </div>
     );
   }
 
   const latest = data[data.length - 1];
-  const current = formatter ? formatter(Number(latest[dataKey])) : Number(latest[dataKey]).toFixed(1);
+  const current = formatter
+    ? formatter(Number(latest[dataKey]))
+    : Number(latest[dataKey]).toFixed(1);
 
   return (
     <div style={{ marginBottom: 16 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-        <span style={{ fontSize: 10, color: 'var(--text-2)', fontWeight: 600 }}>{label}</span>
-        <span className="mono" style={{ fontSize: 11, fontWeight: 600, color }}>{current}{unit}</span>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          marginBottom: 4,
+        }}
+      >
+        <span style={{ fontSize: 10, color: 'var(--text-2)', fontWeight: 600 }}>
+          {label}
+        </span>
+        <span className="mono" style={{ fontSize: 11, fontWeight: 600, color }}>
+          {current}
+          {unit}
+        </span>
       </div>
       <ResponsiveContainer width="100%" height={48}>
-        <AreaChart data={data} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+        <AreaChart
+          data={data}
+          margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+        >
           <defs>
             <linearGradient id={`grad-${dataKey}`} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={color} stopOpacity={0.25} />
               <stop offset="100%" stopColor={color} stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke="var(--border)"
+            vertical={false}
+          />
           <XAxis dataKey="time" hide />
           <YAxis hide domain={['auto', 'auto']} />
           <Tooltip
@@ -65,7 +110,10 @@ function MiniChart({ data, dataKey, color, unit, label, formatter }: MiniChartPr
               fontSize: 11,
             }}
             labelFormatter={() => ''}
-            formatter={(value: any) => [formatter ? formatter(Number(value)) : Number(value).toFixed(1), label]}
+            formatter={(value: unknown) => [
+              formatter ? formatter(Number(value)) : Number(value).toFixed(1),
+              label,
+            ]}
           />
           <Area
             type="monotone"
@@ -91,7 +139,14 @@ function NetworkChart({ data }: NetworkChartProps) {
 
   return (
     <div style={{ marginBottom: 12 }}>
-      <div style={{ fontSize: 10, color: 'var(--text-2)', marginBottom: 4, fontWeight: 600 }}>
+      <div
+        style={{
+          fontSize: 10,
+          color: 'var(--text-2)',
+          marginBottom: 4,
+          fontWeight: 600,
+        }}
+      >
         Network I/O
       </div>
       <div style={{ display: 'flex', gap: 20, marginBottom: 6 }}>
@@ -103,8 +158,15 @@ function NetworkChart({ data }: NetworkChartProps) {
         </div>
       </div>
       <ResponsiveContainer width="100%" height={40}>
-        <AreaChart data={data} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+        <AreaChart
+          data={data}
+          margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+        >
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke="var(--border)"
+            vertical={false}
+          />
           <XAxis dataKey="time" hide />
           <YAxis hide />
           <Area
@@ -140,7 +202,14 @@ function BlockIOChart({ data }: BlockIOChartProps) {
 
   return (
     <div style={{ marginBottom: 12 }}>
-      <div style={{ fontSize: 10, color: 'var(--text-2)', marginBottom: 4, fontWeight: 600 }}>
+      <div
+        style={{
+          fontSize: 10,
+          color: 'var(--text-2)',
+          marginBottom: 4,
+          fontWeight: 600,
+        }}
+      >
         Block I/O
       </div>
       <div style={{ display: 'flex', gap: 20, marginBottom: 6 }}>
@@ -152,8 +221,15 @@ function BlockIOChart({ data }: BlockIOChartProps) {
         </div>
       </div>
       <ResponsiveContainer width="100%" height={40}>
-        <AreaChart data={data} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+        <AreaChart
+          data={data}
+          margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+        >
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke="var(--border)"
+            vertical={false}
+          />
           <XAxis dataKey="time" hide />
           <YAxis hide />
           <Area

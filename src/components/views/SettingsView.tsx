@@ -1,9 +1,18 @@
 import React, { useCallback, useState } from 'react';
 import { RefreshCw, Save, RotateCcw } from 'lucide-react';
 import { useSettingsStore } from '../../store';
-import { SettingsSection } from '../../store/types';
+import {
+  SettingsSection,
+  ThemeOption,
+  UpdateChannel,
+  LoggingDriver,
+} from '../../store/types';
 import { Toggle, Field } from '../shared/ui';
-import { checkForUpdates, installUpdate, UpdateInfo } from '../../backend/updater';
+import {
+  checkForUpdates,
+  installUpdate,
+  UpdateInfo,
+} from '../../backend/updater';
 
 const SECTIONS: { id: SettingsSection; label: string; hint: string }[] = [
   { id: 'general', label: 'General', hint: 'Theme, startup, updates' },
@@ -126,7 +135,7 @@ export default function SettingsView() {
                     className="select"
                     value={settings.theme}
                     onChange={(e) =>
-                      updateSetting('theme', e.target.value as any)
+                      updateSetting('theme', e.target.value as ThemeOption)
                     }
                   >
                     {['dark', 'darker', 'light', 'system'].map((t) => (
@@ -141,7 +150,10 @@ export default function SettingsView() {
                     className="select"
                     value={settings.updateChannel}
                     onChange={(e) =>
-                      updateSetting('updateChannel', e.target.value as any)
+                      updateSetting(
+                        'updateChannel',
+                        e.target.value as UpdateChannel
+                      )
                     }
                   >
                     {['stable', 'beta', 'nightly'].map((t) => (
@@ -247,7 +259,10 @@ export default function SettingsView() {
                     className="select"
                     value={settings.loggingDriver}
                     onChange={(e) =>
-                      updateSetting('loggingDriver', e.target.value as any)
+                      updateSetting(
+                        'loggingDriver',
+                        e.target.value as LoggingDriver
+                      )
                     }
                   >
                     {['json-file', 'local', 'syslog', 'none'].map((t) => (
@@ -557,17 +572,24 @@ function UpdateSection() {
           marginBottom: 8,
         }}
       >
-        <button className="btn" onClick={handleCheck} disabled={checking}>
+        <button
+          className="btn"
+          onClick={() => void handleCheck()}
+          disabled={checking}
+        >
           <RefreshCw
             size={12}
-            style={{ marginRight: 4, ...(checking ? { animation: 'spin 1s linear infinite' } : {}) }}
+            style={{
+              marginRight: 4,
+              ...(checking ? { animation: 'spin 1s linear infinite' } : {}),
+            }}
           />
           {checking ? 'Checking…' : 'Check for Updates'}
         </button>
         {updateInfo?.available && (
           <button
             className="btn btn-primary"
-            onClick={() => installUpdate()}
+            onClick={() => void installUpdate()}
           >
             Update to v{updateInfo.version}
           </button>

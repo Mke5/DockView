@@ -311,7 +311,11 @@ export default function ContainersView() {
         <button className="btn" onClick={() => setShowPullModal(true)}>
           <DownloadCloud size={13} /> Pull image
         </button>
-        <button className="btn" onClick={handleRefresh} disabled={refreshing}>
+        <button
+          className="btn"
+          onClick={() => void handleRefresh()}
+          disabled={refreshing}
+        >
           <RefreshCw size={13} className={refreshing ? 'spin' : ''} /> Refresh
         </button>
         <div className="toolbar-sep" />
@@ -666,7 +670,7 @@ export default function ContainersView() {
                             <button
                               className="btn-icon"
                               title={c.status === 'running' ? 'Stop' : 'Start'}
-                              onClick={() => handleToggle(c)}
+                              onClick={() => void handleToggle(c)}
                               disabled={!!loading}
                             >
                               {loading === 'toggle' ? (
@@ -681,7 +685,7 @@ export default function ContainersView() {
                               <button
                                 className="btn-icon"
                                 title="Pause"
-                                onClick={() => handlePause(c)}
+                                onClick={() => void handlePause(c)}
                               >
                                 {loading === 'pause' ? (
                                   <Spinner size={13} />
@@ -697,7 +701,7 @@ export default function ContainersView() {
                                 style={
                                   { color: 'var(--red)' } as React.CSSProperties
                                 }
-                                onClick={() => handleKill(c)}
+                                onClick={() => void handleKill(c)}
                               >
                                 <X size={13} />
                               </button>
@@ -708,7 +712,7 @@ export default function ContainersView() {
                               style={
                                 { color: 'var(--red)' } as React.CSSProperties
                               }
-                              onClick={() => handleRemove(c)}
+                              onClick={() => void handleRemove(c)}
                             >
                               <Trash2 size={13} />
                             </button>
@@ -827,7 +831,7 @@ export default function ContainersView() {
                   <button
                     className="btn"
                     style={{ justifyContent: 'center' }}
-                    onClick={() => handleToggle(selected)}
+                    onClick={() => void handleToggle(selected)}
                   >
                     {selected.status === 'running' ? (
                       <>
@@ -843,7 +847,7 @@ export default function ContainersView() {
                     <button
                       className="btn"
                       style={{ justifyContent: 'center' }}
-                      onClick={() => handlePause(selected)}
+                      onClick={() => void handlePause(selected)}
                     >
                       <Pause size={13} /> Pause
                     </button>
@@ -852,7 +856,7 @@ export default function ContainersView() {
                     <button
                       className="btn btn-danger"
                       style={{ justifyContent: 'center' }}
-                      onClick={() => handleKill(selected)}
+                      onClick={() => void handleKill(selected)}
                     >
                       <X size={13} /> Kill
                     </button>
@@ -860,7 +864,7 @@ export default function ContainersView() {
                   <button
                     className="btn btn-danger"
                     style={{ justifyContent: 'center' }}
-                    onClick={() => handleRemove(selected)}
+                    onClick={() => void handleRemove(selected)}
                   >
                     <Trash2 size={13} /> Remove
                   </button>
@@ -981,8 +985,8 @@ function RunContainerModal({
         });
       }
       onClose();
-    } catch (e: any) {
-      setError(e?.message || String(e));
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
       setRunning(false);
     }
   }
@@ -1019,7 +1023,7 @@ function RunContainerModal({
           </button>
           <button
             className="btn btn-primary"
-            onClick={handleRun}
+            onClick={() => void handleRun()}
             disabled={running}
           >
             {running ? (
@@ -1227,8 +1231,8 @@ function PullImageModal({ onClose }: { onClose: () => void }) {
             setStep(chunk.status || 'Downloading…');
           }
         );
-      } catch (e: any) {
-        setError(e?.message || String(e));
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : String(e));
         setPulling(false);
       }
     } else {
@@ -1271,7 +1275,7 @@ function PullImageModal({ onClose }: { onClose: () => void }) {
             </button>
             <button
               className="btn btn-primary"
-              onClick={handlePull}
+              onClick={() => void handlePull()}
               disabled={!imageName.trim() || pulling}
             >
               {pulling ? (

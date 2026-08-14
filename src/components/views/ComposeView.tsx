@@ -141,7 +141,7 @@ export default function ComposeView() {
     }
   }
 
-  async function doRestart(stack: ComposeStack) {
+  function doRestart(stack: ComposeStack) {
     setActionLoading((p) => ({ ...p, [stack.id]: 'restart' }));
     try {
       restartStack(stack.id);
@@ -372,7 +372,7 @@ export default function ComposeView() {
                             height: 24,
                             fontSize: 11,
                           }}
-                          onClick={() => doStop(stack)}
+                          onClick={() => void doStop(stack)}
                           disabled={!!loading}
                         >
                           {loading === 'stop' ? (
@@ -391,7 +391,7 @@ export default function ComposeView() {
                             height: 24,
                             fontSize: 11,
                           }}
-                          onClick={() => doStart(stack)}
+                          onClick={() => void doStart(stack)}
                           disabled={!!loading}
                         >
                           {loading === 'start' ? (
@@ -728,7 +728,7 @@ export default function ComposeView() {
                     <button
                       className="btn btn-danger"
                       style={{ justifyContent: 'center' }}
-                      onClick={() => doStop(selected)}
+                      onClick={() => void doStop(selected)}
                     >
                       <Square size={13} /> Stop stack
                     </button>
@@ -736,7 +736,7 @@ export default function ComposeView() {
                     <button
                       className="btn btn-primary"
                       style={{ justifyContent: 'center' }}
-                      onClick={() => doStart(selected)}
+                      onClick={() => void doStart(selected)}
                     >
                       <Play size={13} /> Start stack
                     </button>
@@ -744,7 +744,7 @@ export default function ComposeView() {
                   <button
                     className="btn"
                     style={{ justifyContent: 'center' }}
-                    onClick={() => doRestart(selected)}
+                    onClick={() => void doRestart(selected)}
                   >
                     <RefreshCw size={13} /> Restart
                   </button>
@@ -1087,7 +1087,7 @@ function OpenFileModal({
               placeholder="~/project/docker-compose.yml"
               autoFocus
             />
-            <button className="btn" onClick={handleBrowse}>
+            <button className="btn" onClick={() => void handleBrowse()}>
               <FolderOpen size={13} /> Browse
             </button>
           </div>

@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { X } from 'lucide-react';
 
 export function CloseBtn({ onClick }: { onClick: () => void }) {
   return (

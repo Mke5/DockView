@@ -186,7 +186,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
       if (!keys || keys.length === 0) return state;
       const patch: Partial<DockviewSettings> = {};
       keys.forEach((k) => {
-        (patch as any)[k] = (DEFAULT_SETTINGS as any)[k];
+        Object.assign(patch, { [k]: DEFAULT_SETTINGS[k] });
       });
       return { settings: { ...state.settings, ...patch }, dirty: true };
     }),

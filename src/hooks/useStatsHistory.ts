@@ -24,7 +24,7 @@ export function useStatsHistory(): {
   const unlistenRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
-    onDockerStats((stats) => {
+    void onDockerStats((stats) => {
       for (const s of stats) {
         let points = history.get(s.id);
         if (!points) {
@@ -45,11 +45,14 @@ export function useStatsHistory(): {
           pids: s.pids,
         });
         // Trim to max
-        if (points.length > MAX_POINTS) points.splice(0, points.length - MAX_POINTS);
+        if (points.length > MAX_POINTS)
+          points.splice(0, points.length - MAX_POINTS);
       }
-    }).then((unsub) => {
-      unlistenRef.current = unsub;
-    });
+    })
+      .then((unsub) => {
+        unlistenRef.current = unsub;
+      })
+      .catch(() => {});
 
     return () => {
       unlistenRef.current?.();

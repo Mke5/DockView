@@ -1,3 +1,4 @@
+import type { Update } from '@tauri-apps/plugin-updater';
 import { isTauri } from './utils';
 
 export interface UpdateInfo {
@@ -8,7 +9,7 @@ export interface UpdateInfo {
   date?: string;
 }
 
-let _update: any = null;
+let _update: Update | null = null;
 
 export async function checkForUpdates(): Promise<UpdateInfo> {
   if (!isTauri()) {
@@ -44,6 +45,6 @@ export async function installUpdate(): Promise<void> {
   }
 }
 
-export function getLastUpdate(): any {
+export function getLastUpdate(): Update | null {
   return _update;
 }

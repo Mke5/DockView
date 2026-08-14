@@ -1,5 +1,5 @@
-import React from "react";
-export { Modal } from "./shared/ui";
+import React from 'react';
+export { Modal } from './shared/ui';
 
 // ─── ModalField ───────────────────────────────────────────────────────────────
 
@@ -17,14 +17,14 @@ export function ModalField({
       <div className="flex items-center justify-between">
         <label
           className="text-[11px] font-medium"
-          style={{ color: "var(--text-1)" }}
+          style={{ color: 'var(--text-1)' }}
         >
           {label}
         </label>
         {description && (
           <span
             className="text-[9px] font-mono"
-            style={{ color: "var(--text-muted)" }}
+            style={{ color: 'var(--text-muted)' }}
           >
             {description}
           </span>
@@ -56,7 +56,7 @@ export function ModalInput({
 }) {
   return (
     <input
-      className={`input ${mono ? "mono" : ""} ${error ? "error" : ""}`}
+      className={`input ${mono ? 'mono' : ''} ${error ? 'error' : ''}`}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
@@ -82,17 +82,17 @@ export function ModalToggleRow({
   return (
     <div className="toggle-wrap" onClick={() => onChange(!value)}>
       <div>
-        <div style={{ fontSize: 12.5, color: "var(--text-0)" }}>{label}</div>
+        <div style={{ fontSize: 12.5, color: 'var(--text-0)' }}>{label}</div>
         {description && (
           <div
             className="field-hint"
-            style={{ fontFamily: "IBM Plex Mono, monospace" }}
+            style={{ fontFamily: 'IBM Plex Mono, monospace' }}
           >
             {description}
           </div>
         )}
       </div>
-      <div className={`toggle ${value ? "on" : ""}`} />
+      <div className={`toggle ${value ? 'on' : ''}`} />
     </div>
   );
 }

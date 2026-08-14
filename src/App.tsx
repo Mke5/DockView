@@ -42,27 +42,32 @@ export default function App() {
     initDockerBridge()
       .then(() => setEngineRunning(true))
       .catch(() => setEngineRunning(false));
-  }, []);
+  }, [setEngineRunning]);
 
-  const shortcuts = useMemo(() => [
-    {
-      key: 'k',
-      ctrl: true,
-      handler: () => {
-        const el = document.querySelector<HTMLInputElement>('[data-search]');
-        el?.focus();
+  const shortcuts = useMemo(
+    () => [
+      {
+        key: 'k',
+        ctrl: true,
+        handler: () => {
+          const el = document.querySelector<HTMLInputElement>('[data-search]');
+          el?.focus();
+        },
       },
-    },
-    {
-      key: '/',
-      ctrl: true,
-      handler: () => {
-        const idx = VIEW_ORDER.indexOf(activeView as typeof VIEW_ORDER[number]);
-        const next = VIEW_ORDER[(idx + 1) % VIEW_ORDER.length];
-        setActiveView(next);
+      {
+        key: '/',
+        ctrl: true,
+        handler: () => {
+          const idx = VIEW_ORDER.indexOf(
+            activeView as (typeof VIEW_ORDER)[number]
+          );
+          const next = VIEW_ORDER[(idx + 1) % VIEW_ORDER.length];
+          setActiveView(next);
+        },
       },
-    },
-  ], [activeView, setActiveView]);
+    ],
+    [activeView, setActiveView]
+  );
 
   useKeyboardShortcuts(shortcuts);
 

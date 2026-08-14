@@ -14,6 +14,7 @@ import {
   useBuildStore,
   Network,
   Volume,
+  BuildRecord,
 } from '../../store';
 import { ViewHeader, StatusBadge, Modal, Field, Spinner } from '../shared/ui';
 import { useResizeXRight } from '../shared/useResize';
@@ -68,7 +69,9 @@ export function VolumesView() {
     if (!confirm('Remove volume ' + v.name + '?')) return;
     try {
       if (isTauri()) await removeVolumeBackend(v.name);
-    } catch {}
+    } catch {
+      /* backend error — local removal still proceeds */
+    }
     removeVolume(v.id);
     if (selectedId === v.id) selectVolume(null);
   }
@@ -187,7 +190,7 @@ export function VolumesView() {
                         className="btn-icon"
                         title="Remove"
                         style={{ color: 'var(--red)' }}
-                        onClick={() => handleRemove(v)}
+                        onClick={() => void handleRemove(v)}
                       >
                         <Trash2 size={12} />
                       </button>
@@ -282,7 +285,7 @@ export function VolumesView() {
                   <button
                     className="btn btn-danger"
                     style={{ justifyContent: 'center' }}
-                    onClick={() => handleRemove(selected)}
+                    onClick={() => void handleRemove(selected)}
                   >
                     <Trash2 size={13} /> Remove
                   </button>
@@ -400,8 +403,8 @@ function CreateVolumeModal({
       }
       onCreated(volume);
       onClose();
-    } catch (e: any) {
-      setError(e?.message || String(e));
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
     }
   }
 
@@ -415,7 +418,10 @@ function CreateVolumeModal({
           <button className="btn" onClick={onClose}>
             Cancel
           </button>
-          <button className="btn btn-primary" onClick={handleCreate}>
+          <button
+            className="btn btn-primary"
+            onClick={() => void handleCreate()}
+          >
             <Plus size={13} /> Create
           </button>
         </>
@@ -492,7 +498,9 @@ export function NetworksView() {
     if (!confirm('Remove network ' + n.name + '?')) return;
     try {
       if (isTauri()) await removeNetworkBackend(n.id);
-    } catch {}
+    } catch {
+      /* backend error — local removal still proceeds */
+    }
     removeNetwork(n.id);
     if (selectedId === n.id) selectNetwork(null);
   }
@@ -603,7 +611,7 @@ export function NetworksView() {
                       <button
                         className="btn-icon"
                         style={{ color: 'var(--red)' }}
-                        onClick={() => handleRemove(n)}
+                        onClick={() => void handleRemove(n)}
                       >
                         <Trash2 size={12} />
                       </button>
@@ -698,7 +706,7 @@ export function NetworksView() {
                     <button
                       className="btn btn-danger"
                       style={{ width: '100%', justifyContent: 'center' }}
-                      onClick={() => handleRemove(selected)}
+                      onClick={() => void handleRemove(selected)}
                     >
                       <Trash2 size={13} /> Remove
                     </button>
@@ -778,8 +786,8 @@ function CreateNetworkModal({
       }
       onCreated(network);
       onClose();
-    } catch (e: any) {
-      setError(e?.message || String(e));
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
     }
   }
 
@@ -793,7 +801,10 @@ function CreateNetworkModal({
           <button className="btn" onClick={onClose}>
             Cancel
           </button>
-          <button className="btn btn-primary" onClick={handleCreate}>
+          <button
+            className="btn btn-primary"
+            onClick={() => void handleCreate()}
+          >
             <Plus size={13} /> Create
           </button>
         </>
@@ -1176,7 +1187,7 @@ function NewBuildModal({
   onAdd,
 }: {
   onClose: () => void;
-  onAdd: (b: any) => void;
+  onAdd: (b: BuildRecord) => void;
 }) {
   const [image, setImage] = useState('');
   const [dockerfile, setDockerfile] = useState('./Dockerfile');
@@ -1192,23 +1203,31 @@ function NewBuildModal({
     }
     setBuilding(true);
     try {
-      if (isTauri())
-        await buildImage(image.trim(), dockerfile, context);
+      if (isTauri()) await buildImage(image.trim(), dockerfile, context);
+      const id = 'build-' + Date.now();
       onAdd({
-        id: 'build-' + Date.now(),
+        id,
+        shortId: id,
         image: image.trim(),
         dockerfile,
         context,
         status: 'building',
+        trigger: 'manual',
+        duration: '0s',
         durationMs: 0,
-        sizeBytes: 0,
-        size: '—',
         startedAt: new Date().toLocaleString(),
+        finishedAt: '',
+        size: '—',
+        sizeBytes: 0,
+        platform: 'linux/amd64',
+        cacheUsed: false,
+        steps: [],
+        tags: [image.trim()],
         logs: ['Starting build…'],
       });
       onClose();
-    } catch (e: any) {
-      setError(e?.message || String(e));
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
       setBuilding(false);
     }
   }
@@ -1225,7 +1244,7 @@ function NewBuildModal({
           </button>
           <button
             className="btn btn-primary"
-            onClick={handleBuild}
+            onClick={() => void handleBuild()}
             disabled={building}
           >
             {building ? (
@@ -1434,5 +1453,3 @@ export function LogsView() {
     </div>
   );
 }
-
-

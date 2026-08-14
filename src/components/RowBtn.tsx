@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 export function RowBtn({
   title,
@@ -20,9 +20,7 @@ export function RowBtn({
       disabled={disabled}
       onClick={onClick}
       style={
-        danger
-          ? ({ color: "var(--red)" } as React.CSSProperties)
-          : undefined
+        danger ? ({ color: 'var(--red)' } as React.CSSProperties) : undefined
       }
     >
       {children}

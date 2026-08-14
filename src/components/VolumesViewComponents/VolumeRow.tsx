@@ -1,12 +1,12 @@
-import { FolderOpen, Info, X } from "lucide-react";
-import { Volume } from "../../store";
-import { Cell } from "../Cell";
-import { RowBtn } from "../RowBtn";
-import { sizeColor, VolumeIcon } from "./Modal";
+import { FolderOpen, Info, X } from 'lucide-react';
+import { Volume } from '../../store';
+import { Cell } from '../Cell';
+import { RowBtn } from '../RowBtn';
+import { sizeColor, VolumeIcon } from './Modal';
 
 function shortMount(path: string) {
-  const parts = path.split("/");
-  if (parts.length > 6) return "…/" + parts.slice(-3).join("/");
+  const parts = path.split('/');
+  if (parts.length > 6) return '…/' + parts.slice(-3).join('/');
   return path;
 }
 
@@ -23,20 +23,20 @@ export function VolumeRow({
   onRemove: () => void;
   onBrowse: () => void;
 }) {
-  const rowBg = selected ? "var(--accent-dim)" : "var(--bg1)";
-  const rowBorder = selected ? "rgba(0,212,255,0.25)" : "var(--border)";
+  const rowBg = selected ? 'var(--accent-dim)' : 'var(--bg1)';
+  const rowBorder = selected ? 'rgba(0,212,255,0.25)' : 'var(--border)';
 
   return (
     <tr
       className="group"
       onClick={onSelect}
-      style={{ cursor: "pointer" }}
+      style={{ cursor: 'pointer' }}
       onMouseEnter={(e) => {
         if (!selected)
           Array.from(e.currentTarget.cells).forEach((td) => {
-            td.style.background = "var(--bg2)";
-            td.style.borderTopColor = "var(--border-lit)";
-            td.style.borderBottomColor = "var(--border-lit)";
+            td.style.background = 'var(--bg2)';
+            td.style.borderTopColor = 'var(--border-lit)';
+            td.style.borderBottomColor = 'var(--border-lit)';
           });
       }}
       onMouseLeave={(e) => {
@@ -51,20 +51,20 @@ export function VolumeRow({
       {/* Name */}
       <Cell
         first
-        style={{ background: rowBg, borderColor: rowBorder, width: "22%" }}
+        style={{ background: rowBg, borderColor: rowBorder, width: '22%' }}
       >
         <div className="flex items-center gap-2.5">
           <VolumeIcon inUse={v.inUse} sizeBytes={v.sizeBytes} />
           <div>
             <div
               className="text-xs font-semibold font-mono"
-              style={{ color: "var(--text-primary)" }}
+              style={{ color: 'var(--text-primary)' }}
             >
               {v.name}
             </div>
             <div
               className="text-[10px] font-mono"
-              style={{ color: "var(--text-muted)" }}
+              style={{ color: 'var(--text-muted)' }}
             >
               {v.scope} · {v.driver}
             </div>
@@ -73,13 +73,13 @@ export function VolumeRow({
       </Cell>
 
       {/* Driver */}
-      <Cell style={{ background: rowBg, borderColor: rowBorder, width: "9%" }}>
+      <Cell style={{ background: rowBg, borderColor: rowBorder, width: '9%' }}>
         <span
           className="inline-block px-2 py-0.5 rounded text-[10px] font-mono font-medium"
           style={{
-            background: "var(--bg3)",
-            border: "1px solid var(--border-lit)",
-            color: "var(--text-secondary)",
+            background: 'var(--bg3)',
+            border: '1px solid var(--border-lit)',
+            color: 'var(--text-secondary)',
           }}
         >
           {v.driver}
@@ -87,10 +87,10 @@ export function VolumeRow({
       </Cell>
 
       {/* Mount point */}
-      <Cell style={{ background: rowBg, borderColor: rowBorder, width: "30%" }}>
+      <Cell style={{ background: rowBg, borderColor: rowBorder, width: '30%' }}>
         <span
           className="text-[10px] font-mono"
-          style={{ color: "var(--text-muted)" }}
+          style={{ color: 'var(--text-muted)' }}
           title={v.mountpoint}
         >
           {shortMount(v.mountpoint)}
@@ -98,11 +98,11 @@ export function VolumeRow({
       </Cell>
 
       {/* Size */}
-      <Cell style={{ background: rowBg, borderColor: rowBorder, width: "10%" }}>
+      <Cell style={{ background: rowBg, borderColor: rowBorder, width: '10%' }}>
         <div className="flex items-center gap-1.5">
           <div
             className="w-10 h-1 rounded-full overflow-hidden shrink-0"
-            style={{ background: "var(--bg4)" }}
+            style={{ background: 'var(--bg4)' }}
           >
             <div
               className="h-full rounded-full"
@@ -114,7 +114,7 @@ export function VolumeRow({
           </div>
           <span
             className="text-[11px] font-mono whitespace-nowrap"
-            style={{ color: "var(--text-secondary)" }}
+            style={{ color: 'var(--text-secondary)' }}
           >
             {v.size}
           </span>
@@ -122,37 +122,37 @@ export function VolumeRow({
       </Cell>
 
       {/* Created */}
-      <Cell style={{ background: rowBg, borderColor: rowBorder, width: "10%" }}>
+      <Cell style={{ background: rowBg, borderColor: rowBorder, width: '10%' }}>
         <span
           className="text-[10px] font-mono whitespace-nowrap"
-          style={{ color: "var(--text-muted)" }}
+          style={{ color: 'var(--text-muted)' }}
         >
           {v.created}
         </span>
       </Cell>
 
       {/* Status */}
-      <Cell style={{ background: rowBg, borderColor: rowBorder, width: "1%" }}>
+      <Cell style={{ background: rowBg, borderColor: rowBorder, width: '1%' }}>
         {v.inUse ? (
           <span
             className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-semibold uppercase"
-            style={{ background: "var(--green-dim)", color: "var(--green)" }}
+            style={{ background: 'var(--green-dim)', color: 'var(--green)' }}
           >
             <span
               className="w-1.5 h-1.5 rounded-full shrink-0"
-              style={{ background: "var(--green)" }}
+              style={{ background: 'var(--green)' }}
             />
             In use
           </span>
         ) : (
           <span
             className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-semibold uppercase"
-            style={{ background: "var(--bg4)", color: "var(--text-muted)" }}
+            style={{ background: 'var(--bg4)', color: 'var(--text-muted)' }}
           >
             <span
               className="w-1.5 h-1.5 rounded-full shrink-0"
-              style={{ background: "var(--text-muted)" }}
-            />{" "}
+              style={{ background: 'var(--text-muted)' }}
+            />{' '}
             Unused
           </span>
         )}
@@ -161,7 +161,7 @@ export function VolumeRow({
       {/* Actions */}
       <Cell
         last
-        style={{ background: rowBg, borderColor: rowBorder, width: "8%" }}
+        style={{ background: rowBg, borderColor: rowBorder, width: '8%' }}
       >
         <div className="flex items-center gap-1 transition-opacity duration-150">
           <RowBtn title="Inspect" onClick={onSelect}>
@@ -171,7 +171,7 @@ export function VolumeRow({
             <FolderOpen className="w-4 h-4" />
           </RowBtn>
           <RowBtn
-            title={v.inUse ? "Stop containers first" : "Remove"}
+            title={v.inUse ? 'Stop containers first' : 'Remove'}
             danger
             disabled={v.inUse}
             onClick={onRemove}

@@ -1,22 +1,19 @@
-import React from "react";
+import React from 'react';
 
 export function Button({
-  variant = "primary",
-  className = "",
+  variant = 'primary',
+  className = '',
   onClick,
   disabled,
   children,
 }: {
-  variant?: "primary" | "secondary";
+  variant?: 'primary' | 'secondary';
   className?: string;
   onClick?: () => void;
   disabled?: boolean;
   children: React.ReactNode;
 }) {
-  const cls =
-    variant === "primary"
-      ? "btn btn-primary"
-      : "btn";
+  const cls = variant === 'primary' ? 'btn btn-primary' : 'btn';
 
   return (
     <button
