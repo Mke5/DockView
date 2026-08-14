@@ -68,12 +68,15 @@ jobs:
             ${{ runner.os }}-cargo-
 
       - name: Rust format check
+        working-directory: src-tauri
         run: cargo fmt --all -- --check
 
       - name: Clippy lints
+        working-directory: src-tauri
         run: cargo clippy --all-targets --all-features -- -D warnings
 
       - name: Cargo tests
+        working-directory: src-tauri
         run: cargo test --all-features --verbose
 
   # Build matrix for all platforms
