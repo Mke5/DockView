@@ -2,14 +2,18 @@ use crate::{
     api::utils::{CmdResult, CommandError},
     state::{AppState, ExecSession},
 };
+use bollard::container::LogOutput;
+use bollard::exec::{CreateExecOptions, ResizeExecOptions, StartExecOptions, StartExecResults};
+use futures_util::StreamExt;
 use tauri::{Emitter, State};
 use uuid::Uuid;
 
-/// Start a shell session inside a container via `docker exec -i`.
+/// Start a shell session inside a container via bollard's exec API.
 ///
-/// Returns a session id that the frontend uses for subsequent `exec_write`
-/// and `exec_stop` calls.  Output is streamed to the frontend via the
-/// `exec://output` event.
+/// A pseudo-TTY is allocated inside the container (`tty: true`), so
+/// interactive shells get a prompt, input echo, colors, and resize
+/// support.  Output is streamed to the frontend via the `exec://output`
+/// event.
 #[tauri::command]
 pub async fn exec_session_start(
     app: tauri::AppHandle,
@@ -17,77 +21,78 @@ pub async fn exec_session_start(
     shell: String,
     state: State<'_, AppState>,
 ) -> CmdResult<String> {
-    use tokio::io::AsyncReadExt;
+    let docker = state.docker.get().await.map_err(CommandError::from)?;
+
+    let created = docker
+        .create_exec(
+            &container_id,
+            CreateExecOptions {
+                attach_stdin: Some(true),
+                attach_stdout: Some(true),
+                attach_stderr: Some(true),
+                tty: Some(true),
+                cmd: Some(vec![shell.clone()]),
+                ..Default::default()
+            },
+        )
+        .await
+        .map_err(|e| CommandError::new(format!("Failed to create exec: {e}")))?;
+
+    let exec_id = created.id;
+
+    let started = docker
+        .start_exec(
+            &exec_id,
+            Some(StartExecOptions {
+                detach: false,
+                tty: true,
+                ..Default::default()
+            }),
+        )
+        .await
+        .map_err(|e| CommandError::new(format!("Failed to start exec: {e}")))?;
+
+    let (mut output, input) = match started {
+        StartExecResults::Attached { output, input } => (output, input),
+        StartExecResults::Detached => {
+            return Err(CommandError::new("Exec session detached unexpectedly"));
+        }
+    };
 
     let session_id = Uuid::new_v4().to_string();
 
-    let mut child = tokio::process::Command::new("docker")
-        .args(["exec", "-i", &container_id, &shell])
-        .stdin(std::process::Stdio::piped())
-        .stdout(std::process::Stdio::piped())
-        .stderr(std::process::Stdio::piped())
-        .spawn()
-        .map_err(|e| CommandError::new(format!("Failed to spawn docker exec: {e}")))?;
-
-    let stdin = child.stdin.take();
-    let mut stdout = child
-        .stdout
-        .take()
-        .ok_or_else(|| CommandError::new("No stdout on exec child"))?;
-    let mut stderr = child
-        .stderr
-        .take()
-        .ok_or_else(|| CommandError::new("No stderr on exec child"))?;
-
-    // Spawn a task that reads stdout and fires events
+    // Forward exec output to the frontend. With a TTY the daemon sends a
+    // single raw stream, which bollard surfaces as `LogOutput::Console`.
     let sid = session_id.clone();
     let app_clone = app.clone();
-    let stdout_handle = tokio::spawn(async move {
-        let mut buf = vec![0u8; 4096];
-        loop {
-            match stdout.read(&mut buf).await {
-                Ok(0) => break,
-                Ok(n) => {
-                    let payload = serde_json::json!({
-                        "sessionId": sid,
-                        "stream": "stdout",
-                        "data": String::from_utf8_lossy(&buf[..n]),
-                    });
-                    let _ = app_clone.emit("exec://output", payload);
+    let read_handle = tokio::spawn(async move {
+        while let Some(chunk) = output.next().await {
+            let payload = match chunk {
+                Ok(LogOutput::StdOut { message }) => Some(("stdout", message)),
+                Ok(LogOutput::StdErr { message }) => Some(("stderr", message)),
+                Ok(LogOutput::Console { message }) => Some(("stdout", message)),
+                Ok(LogOutput::StdIn { .. }) | Err(_) => None,
+            };
+            if let Some((stream, message)) = payload {
+                let data = String::from_utf8_lossy(&message).to_string();
+                let payload = serde_json::json!({
+                    "sessionId": sid,
+                    "stream": stream,
+                    "data": data,
+                });
+                if app_clone.emit("exec://output", payload).is_err() {
+                    break;
                 }
-                Err(_) => break,
             }
         }
     });
 
-    // Spawn a task that reads stderr and fires events
-    let sid = session_id.clone();
-    let app_clone2 = app.clone();
-    let stderr_handle = tokio::spawn(async move {
-        let mut buf = vec![0u8; 4096];
-        loop {
-            match stderr.read(&mut buf).await {
-                Ok(0) => break,
-                Ok(n) => {
-                    let payload = serde_json::json!({
-                        "sessionId": sid,
-                        "stream": "stderr",
-                        "data": String::from_utf8_lossy(&buf[..n]),
-                    });
-                    let _ = app_clone2.emit("exec://output", payload);
-                }
-                Err(_) => break,
-            }
-        }
-    });
-
-    // Store session
     let session = ExecSession {
-        child: Some(child),
-        stdin,
+        exec_id,
+        input: Some(input),
         container_id: container_id.clone(),
         shell: shell.clone(),
-        read_handles: vec![stdout_handle, stderr_handle],
+        read_handles: vec![read_handle],
     };
     state
         .exec_sessions
@@ -112,8 +117,8 @@ pub async fn exec_session_write(
         .get_mut(&session_id)
         .ok_or_else(|| CommandError::new("Session not found"))?;
 
-    if let Some(stdin) = session.stdin.as_mut() {
-        stdin
+    if let Some(input) = session.input.as_mut() {
+        input
             .write_all(data.as_bytes())
             .await
             .map_err(|e| CommandError::new(format!("stdin write error: {e}")))?;
@@ -122,7 +127,7 @@ pub async fn exec_session_write(
     Ok(())
 }
 
-/// Resize the terminal (send SIGWINCH / set cols/rows) inside the exec session.
+/// Resize the pseudo-TTY of an exec session.
 #[tauri::command]
 pub async fn exec_session_resize(
     session_id: String,
@@ -130,22 +135,21 @@ pub async fn exec_session_resize(
     rows: u32,
     state: State<'_, AppState>,
 ) -> CmdResult<()> {
+    let docker = state.docker.get().await.map_err(CommandError::from)?;
+
     let sessions = state.exec_sessions.lock().await;
     let session = sessions
         .get(&session_id)
         .ok_or_else(|| CommandError::new("Session not found"))?;
 
-    // Use `resize` command inside the container to update terminal size
-    tokio::process::Command::new("docker")
-        .args([
-            "exec",
-            &session.container_id,
-            "resize",
-            "-s",
-            &rows.to_string(),
-            &cols.to_string(),
-        ])
-        .output()
+    docker
+        .resize_exec(
+            &session.exec_id,
+            ResizeExecOptions {
+                height: rows as u16,
+                width: cols as u16,
+            },
+        )
         .await
         .map_err(|e| CommandError::new(format!("resize error: {e}")))?;
 
@@ -155,15 +159,18 @@ pub async fn exec_session_resize(
 /// Stop and remove an exec session.
 #[tauri::command]
 pub async fn exec_session_stop(session_id: String, state: State<'_, AppState>) -> CmdResult<()> {
+    use tokio::io::AsyncWriteExt;
+
     let mut sessions = state.exec_sessions.lock().await;
     if let Some(mut session) = sessions.remove(&session_id) {
-        // Abort read tasks first to prevent use-after-close
+        // Ask the shell to exit, then abort the read task and close the
+        // connection. Dropping `input` detaches the client; the TTY will
+        // be torn down by the daemon.
+        if let Some(input) = session.input.as_mut() {
+            let _ = input.write_all(b"exit\r\n").await;
+        }
         for handle in &session.read_handles {
             handle.abort();
-        }
-        if let Some(ref mut child) = session.child {
-            let _ = child.kill().await;
-            let _ = child.wait().await;
         }
     }
     Ok(())

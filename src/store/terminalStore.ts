@@ -10,6 +10,7 @@ interface TerminalState {
   restoreTab: (tab: TerminalTab) => void;
   closeTab: (id: string) => void;
   setActiveTab: (id: string) => void;
+  setTabConnected: (id: string, connected: boolean) => void;
   pushLine: (tabId: string, line: Omit<TerminalHistoryLine, 'id'>) => void;
   clearTab: (id: string) => void;
   setFontSize: (size: number) => void;
@@ -61,6 +62,10 @@ export const useTerminalStore = create<TerminalState>((set) => ({
       return { tabs, activeTabId };
     }),
   setActiveTab: (id) => set({ activeTabId: id }),
+  setTabConnected: (id, connected) =>
+    set((state) => ({
+      tabs: state.tabs.map((t) => (t.id === id ? { ...t, connected } : t)),
+    })),
   pushLine: (tabId, line) =>
     set((state) => ({
       tabs: state.tabs.map((t) =>

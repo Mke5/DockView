@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Hammer,
   FileText,
@@ -12,6 +12,7 @@ import {
   useVolumeStore,
   useNetworkStore,
   useBuildStore,
+  useContainerStore,
   Network,
   Volume,
   BuildRecord,
@@ -26,6 +27,8 @@ import {
   createNetwork,
   removeVolume as removeVolumeBackend,
   removeNetwork as removeNetworkBackend,
+  getContainerLogs,
+  streamContainerLogs,
 } from '../../backend';
 
 // ─── Volumes ─────────────────────────────────────────────────────────────────
@@ -1301,72 +1304,156 @@ function NewBuildModal({
   );
 }
 
-// ─── Logs (placeholder) ───────────────────────────────────────────────────────
+// ─── Logs ────────────────────────────────────────────────────────────────────
 
-const SAMPLE_LOGS = [
-  {
-    time: '14:32:01',
-    level: 'INFO',
-    src: 'nginx-proxy',
-    msg: 'GET /api/health 200 OK (3ms)',
-  },
-  {
-    time: '14:32:02',
-    level: 'INFO',
-    src: 'postgres-db',
-    msg: 'checkpoint starting: time',
-  },
-  {
-    time: '14:32:03',
-    level: 'WARN',
-    src: 'redis-cache',
-    msg: 'Slow log: 142ms',
-  },
-  {
-    time: '14:32:04',
-    level: 'INFO',
-    src: 'app',
-    msg: 'Connected to postgres at 172.18.0.3:5432',
-  },
-  {
-    time: '14:32:05',
-    level: 'ERROR',
-    src: 'worker',
-    msg: 'Job failed: connection refused',
-  },
-  {
-    time: '14:32:06',
-    level: 'INFO',
-    src: 'nginx-proxy',
-    msg: 'POST /api/login 200 OK (12ms)',
-  },
-  {
-    time: '14:32:07',
-    level: 'DEBUG',
-    src: 'app',
-    msg: 'Cache hit for key user:42',
-  },
-  {
-    time: '14:32:08',
-    level: 'INFO',
-    src: 'postgres-db',
-    msg: 'checkpoint complete: wrote 14 buffers',
-  },
-];
-const LEVEL_COLOR: Record<string, string> = {
-  INFO: 'var(--blue)',
-  WARN: 'var(--amber)',
-  ERROR: 'var(--red)',
-  DEBUG: 'var(--text-2)',
+interface LogRow {
+  id: string;
+  time: string;
+  stream: 'stdout' | 'stderr';
+  src: string;
+  msg: string;
+}
+
+const STREAM_COLOR: Record<string, string> = {
+  stdout: 'var(--green)',
+  stderr: 'var(--red)',
 };
 
+function formatLogTime(ts: string): string {
+  if (!ts) return '';
+  const d = new Date(ts);
+  if (isNaN(d.getTime())) return ts;
+  return d.toLocaleTimeString(undefined, { hour12: false });
+}
+
 export function LogsView() {
-  const [filter, setFilter] = useState('all');
+  const { containers } = useContainerStore();
+  const logsTargetContainerId = useAppStore((s) => s.logsTargetContainerId);
+  const setLogsTargetContainerId = useAppStore(
+    (s) => s.setLogsTargetContainerId
+  );
+
+  const [containerId, setContainerId] = useState('');
+  const [streamFilter, setStreamFilter] = useState<'all' | 'stdout' | 'stderr'>(
+    'all'
+  );
   const [search, setSearch] = useState('');
-  const logs = SAMPLE_LOGS.filter(
-    (l) =>
-      (filter === 'all' || l.level === filter) &&
-      (!search || l.msg.includes(search) || l.src.includes(search))
+  const [rows, setRows] = useState<LogRow[]>([]);
+  const [follow, setFollow] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
+  const stopStreamRef = useRef<(() => void) | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Preselect a container when navigated from the Containers view
+  useEffect(() => {
+    if (logsTargetContainerId) {
+      setContainerId(logsTargetContainerId);
+      setLogsTargetContainerId(null);
+    } else if (!containerId && containers.length > 0) {
+      setContainerId(containers[0].id);
+    }
+  }, [
+    logsTargetContainerId,
+    setLogsTargetContainerId,
+    containerId,
+    containers,
+  ]);
+
+  // Load initial logs + start live streaming
+  useEffect(() => {
+    stopStreamRef.current?.();
+    if (!containerId || !isTauri()) return;
+
+    let cancelled = false;
+    setError('');
+
+    void (async () => {
+      try {
+        const initial = await getContainerLogs(containerId, 200);
+        if (cancelled) return;
+        const container = containers.find((c) => c.id === containerId);
+        setRows(
+          initial.map((l) => ({
+            id: `${l.timestamp}-${l.message}`,
+            time: formatLogTime(l.timestamp),
+            stream: l.stream,
+            src: container?.name ?? l.containerName ?? containerId.slice(0, 12),
+            msg: l.message,
+          }))
+        );
+
+        if (follow) {
+          stopStreamRef.current = await streamContainerLogs(
+            containerId,
+            (chunk) => {
+              if (cancelled) return;
+              const containerName = container?.name ?? chunk.containerName;
+              setRows((prev) => {
+                const next = [
+                  ...prev,
+                  {
+                    id: `${chunk.timestamp}-${chunk.message}-${Math.random()}`,
+                    time: formatLogTime(chunk.timestamp),
+                    stream: chunk.stream,
+                    src: containerName ?? containerId.slice(0, 12),
+                    msg: chunk.message,
+                  },
+                ];
+                return next.length > 500 ? next.slice(-500) : next;
+              });
+            },
+            { tail: 0, follow: true }
+          );
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : String(e));
+          setRows([]);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      stopStreamRef.current?.();
+      stopStreamRef.current = null;
+    };
+  }, [containerId, follow, containers]);
+
+  // Auto-scroll to bottom when following live output
+  useEffect(() => {
+    if (follow && scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [rows, follow]);
+
+  async function handleRefresh() {
+    if (!containerId) return;
+    setRefreshing(true);
+    try {
+      const latest = await getContainerLogs(containerId, 200);
+      const container = containers.find((c) => c.id === containerId);
+      setRows(
+        latest.map((l) => ({
+          id: `${l.timestamp}-${l.message}`,
+          time: formatLogTime(l.timestamp),
+          stream: l.stream,
+          src: container?.name ?? l.containerName ?? containerId.slice(0, 12),
+          msg: l.message,
+        }))
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
+  const visible = rows.filter(
+    (r) =>
+      (streamFilter === 'all' || r.stream === streamFilter) &&
+      (!search || r.msg.toLowerCase().includes(search.toLowerCase()))
   );
 
   return (
@@ -1378,8 +1465,21 @@ export function LogsView() {
         overflow: 'hidden',
       }}
     >
-      <ViewHeader title="Logs" subtitle="Aggregated container output" />
+      <ViewHeader title="Logs" subtitle="Live container output" />
       <div className="toolbar">
+        <select
+          className="select"
+          style={{ width: 220 }}
+          value={containerId}
+          onChange={(e) => setContainerId(e.target.value)}
+        >
+          <option value="">Select a container…</option>
+          {containers.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name} ({c.status})
+            </option>
+          ))}
+        </select>
         <input
           className="input mono"
           style={{ width: 200 }}
@@ -1388,20 +1488,59 @@ export function LogsView() {
           onChange={(e) => setSearch(e.target.value)}
         />
         <div className="toolbar-sep" />
-        {['all', 'INFO', 'WARN', 'ERROR', 'DEBUG'].map((f) => (
+        {(['all', 'stdout', 'stderr'] as const).map((f) => (
           <button
             key={f}
-            className={'filter-tab' + (filter === f ? ' active' : '')}
-            onClick={() => setFilter(f)}
+            className={'filter-tab' + (streamFilter === f ? ' active' : '')}
+            onClick={() => setStreamFilter(f)}
           >
             {f}
           </button>
         ))}
-        <button className="btn" style={{ marginLeft: 'auto' }}>
-          <RefreshCw size={13} /> Refresh
+        <button
+          className={'btn' + (follow ? ' btn-primary' : '')}
+          onClick={() => setFollow((f) => !f)}
+          disabled={!isTauri()}
+        >
+          {follow ? 'Following' : 'Follow'}
+        </button>
+        <button
+          className="btn"
+          style={{ marginLeft: 'auto' }}
+          onClick={() => void handleRefresh()}
+          disabled={refreshing || !containerId}
+        >
+          <RefreshCw size={13} className={refreshing ? 'spin' : ''} />
+          Refresh
         </button>
       </div>
+      {!isTauri() && (
+        <div
+          style={{
+            padding: '6px 14px',
+            fontSize: 11,
+            color: 'var(--amber)',
+            borderBottom: '1px solid var(--border)',
+          }}
+        >
+          Logs require the native app — Docker socket is unavailable in the
+          browser.
+        </div>
+      )}
+      {error && (
+        <div
+          style={{
+            padding: '8px 14px',
+            fontSize: 12,
+            color: 'var(--red)',
+            borderBottom: '1px solid var(--border)',
+          }}
+        >
+          {error}
+        </div>
+      )}
       <div
+        ref={scrollRef}
         style={{
           flex: 1,
           overflow: 'auto',
@@ -1410,9 +1549,16 @@ export function LogsView() {
           fontSize: 11.5,
         }}
       >
-        {logs.map((l, i) => (
+        {visible.length === 0 && (
+          <div style={{ padding: '12px 14px', color: 'var(--text-2)' }}>
+            {containerId
+              ? 'No matching log lines yet…'
+              : 'Select a container to view its logs'}
+          </div>
+        )}
+        {visible.map((l) => (
           <div
-            key={i}
+            key={l.id}
             style={{
               display: 'flex',
               gap: 12,
@@ -1426,13 +1572,13 @@ export function LogsView() {
             </span>
             <span
               style={{
-                color: LEVEL_COLOR[l.level],
+                color: STREAM_COLOR[l.stream],
                 flexShrink: 0,
-                width: 44,
+                width: 48,
                 fontWeight: 600,
               }}
             >
-              {l.level}
+              {l.stream}
             </span>
             <span
               style={{

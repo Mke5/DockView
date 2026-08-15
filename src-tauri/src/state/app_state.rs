@@ -1,11 +1,13 @@
 use crate::docker::client::DockerClient;
 use std::collections::HashMap;
+use std::pin::Pin;
 use std::sync::Arc;
+use tokio::io::AsyncWrite;
 use tokio::sync::Mutex;
 
 pub struct ExecSession {
-    pub child: Option<tokio::process::Child>,
-    pub stdin: Option<tokio::process::ChildStdin>,
+    pub exec_id: String,
+    pub input: Option<Pin<Box<dyn AsyncWrite + Send>>>,
     pub container_id: String,
     pub shell: String,
     pub read_handles: Vec<tokio::task::JoinHandle<()>>,

@@ -150,6 +150,13 @@ export default function ContainersView() {
     addContainer,
   } = useContainerStore();
   const { searchQuery } = useAppStore();
+  const setActiveView = useAppStore((s) => s.setActiveView);
+  const setTerminalTargetContainerId = useAppStore(
+    (s) => s.setTerminalTargetContainerId
+  );
+  const setLogsTargetContainerId = useAppStore(
+    (s) => s.setLogsTargetContainerId
+  );
 
   const [showRunModal, setShowRunModal] = useState(false);
   const [showPullModal, setShowPullModal] = useState(false);
@@ -656,14 +663,20 @@ export default function ContainersView() {
                             <button
                               className="btn-icon"
                               title="Logs"
-                              onClick={() => {}}
+                              onClick={() => {
+                                setLogsTargetContainerId(c.id);
+                                setActiveView('logs');
+                              }}
                             >
                               <FileText size={13} />
                             </button>
                             <button
                               className="btn-icon"
                               title="Terminal"
-                              onClick={() => {}}
+                              onClick={() => {
+                                setTerminalTargetContainerId(c.id);
+                                setActiveView('terminal');
+                              }}
                             >
                               <Terminal size={13} />
                             </button>

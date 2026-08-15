@@ -2,12 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
-import { useContainerStore, useTerminalStore } from '../../store';
+import { useContainerStore, useTerminalStore, useAppStore } from '../../store';
 import { TerminalTab } from '../../store/types';
 import { ViewHeader } from '../shared/ui';
 import {
   execSessionStart,
   execSessionWrite,
+  execSessionResize,
   execSessionStop,
   onExecOutput,
 } from '../../backend/docker';
@@ -58,6 +59,12 @@ export default function TerminalView() {
   const [showHistory, setShowHistory] = useState(false);
 
   const { containers } = useContainerStore();
+  const terminalTargetContainerId = useAppStore(
+    (s) => s.terminalTargetContainerId
+  );
+  const setTerminalTargetContainerId = useAppStore(
+    (s) => s.setTerminalTargetContainerId
+  );
   const {
     tabs,
     activeTabId,
@@ -65,10 +72,19 @@ export default function TerminalView() {
     restoreTab,
     closeTab,
     setActiveTab,
+    setTabConnected,
     pushLine,
     fontSize,
     setFontSize,
   } = useTerminalStore();
+
+  // Preselect a container when navigated from the Containers view
+  useEffect(() => {
+    if (terminalTargetContainerId) {
+      setContainerId(terminalTargetContainerId);
+      setTerminalTargetContainerId(null);
+    }
+  }, [terminalTargetContainerId, setTerminalTargetContainerId]);
 
   const running = useMemo(
     () => containers.filter((c) => c.status === 'running'),
@@ -83,6 +99,11 @@ export default function TerminalView() {
   const activeSessionId = activeTabId
     ? (sessionMapRef.current.get(activeTabId) ?? null)
     : null;
+
+  // Always-current session id so the mount-time onData callback can read
+  // which session is active *at keystroke time* (not at mount time).
+  const activeSessionIdRef = useRef<string | null>(null);
+  activeSessionIdRef.current = activeSessionId;
 
   // Initialize xterm.js once
   useEffect(() => {
@@ -122,19 +143,35 @@ export default function TerminalView() {
     fit.fit();
 
     term.onData((data) => {
-      const sid = activeSessionId;
+      const sid = activeSessionIdRef.current;
       if (sid) execSessionWrite(sid, data).catch(() => {});
     });
+
+    // Forward terminal resize events (from fit() or window resizes) to the
+    // backend so the container's pty follows the viewport size.
+    term.onResize(({ cols, rows }) => {
+      const sid = activeSessionIdRef.current;
+      if (sid && isTauri()) {
+        execSessionResize(sid, cols, rows).catch(() => {});
+      }
+    });
+
+    const onWindowResize = () => {
+      fitAddonRef.current?.fit();
+    };
+    window.addEventListener('resize', onWindowResize);
 
     termRef.current = term;
     fitAddonRef.current = fit;
 
     return () => {
+      window.removeEventListener('resize', onWindowResize);
       term.dispose();
       termRef.current = null;
       fitAddonRef.current = null;
     };
-    // Mount-only init: term.onData intentionally captures the session id at mount time.
+    // Mount-only init: fontSize is captured at mount time; the dedicated
+    // effect below keeps the live terminal in sync with font size changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -146,11 +183,15 @@ export default function TerminalView() {
     fitAddonRef.current?.fit();
   }, [fontSize]);
 
-  // Replay history when switching tabs
+  // Replay history when switching tabs. Reads the tab from the store directly
+  // so this only fires on tab switches — NOT on every pushLine (which would
+  // clear and rewrite the screen while typing).
   useEffect(() => {
     const term = termRef.current;
     if (!term) return;
-    const tab = tabs.find((t) => t.id === activeTabId);
+    const tab = useTerminalStore
+      .getState()
+      .tabs.find((t) => t.id === activeTabId);
     if (!tab) return;
     term.clear();
     for (const line of tab.history) {
@@ -166,23 +207,25 @@ export default function TerminalView() {
         line.type === 'error' || line.type === 'system' ? '\x1b[0m' : '';
       term.writeln(prefix + line.content + suffix);
     }
-  }, [activeTabId, tabs]);
+  }, [activeTabId]);
 
-  async function handleConnect() {
-    if (!containerId || !isTauri() || connecting) return;
+  async function handleConnect(targetId?: string, targetShell?: string) {
+    const cid = targetId ?? containerId;
+    const sh = targetShell ?? shell;
+    if (!cid || !isTauri() || connecting) return;
     setConnecting(true);
 
     try {
-      const sid = await execSessionStart(containerId, shell);
-      const container = running.find((c) => c.id === containerId);
-      const label = container?.name ?? containerId.slice(0, 12);
+      const sid = await execSessionStart(cid, sh);
+      const container = running.find((c) => c.id === cid);
+      const label = container?.name ?? cid.slice(0, 12);
 
       addTab({
         label,
         target: 'container',
-        targetId: containerId,
+        targetId: cid,
         targetName: label,
-        shell,
+        shell: sh,
         cwd: '/',
         user: 'root',
         connected: true,
@@ -202,8 +245,14 @@ export default function TerminalView() {
       });
       unlistenRef.current = unsub;
 
-      pushLine(tab.id, { type: 'system', content: `Connected via ${shell}` });
-      termRef.current?.writeln('\r\n\x1b[32mConnected\x1b[0m via ' + shell);
+      // Sync the container pty to the current viewport size
+      const dims = fitAddonRef.current?.proposeDimensions();
+      if (dims) {
+        execSessionResize(sid, dims.cols, dims.rows).catch(() => {});
+      }
+
+      pushLine(tab.id, { type: 'system', content: `Connected via ${sh}` });
+      termRef.current?.writeln('\r\n\x1b[32mConnected\x1b[0m via ' + sh);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       termRef.current?.writeln('\r\n\x1b[31mError:\x1b[0m ' + msg);
@@ -223,11 +272,12 @@ export default function TerminalView() {
         /* already gone — ignore */
       }
     }
+    setTabConnected(activeTabId, false);
     pushLine(activeTabId, { type: 'system', content: 'Disconnected' });
     termRef.current?.writeln('\r\n\x1b[33mDisconnected\x1b[0m');
     unlistenRef.current?.();
     unlistenRef.current = null;
-  }, [activeTabId, pushLine]);
+  }, [activeTabId, pushLine, setTabConnected]);
 
   function handleCloseTab(id: string) {
     const sid = sessionMapRef.current.get(id);
@@ -387,7 +437,9 @@ export default function TerminalView() {
           ) : activeTab && !activeTab.connected ? (
             <button
               className="btn"
-              onClick={() => addTab({ ...activeTab, connected: true })}
+              onClick={() =>
+                void handleConnect(activeTab.targetId, activeTab.shell)
+              }
             >
               Reconnect
             </button>
