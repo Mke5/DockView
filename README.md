@@ -184,4 +184,4 @@ See `.github/workflows/ci.yml` for the exact checks that must pass.
 
 ## License
 
-[MIT](LICENSE) © 2026 Mke5
+[MIT](LICENSE)
