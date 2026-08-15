@@ -32,7 +32,6 @@
 | ---------------------------------------------- | --------------------------------------------- | -------------------------------------- |
 | ![Containers View](screenshots/containers.png) | ![Terminal Session](screenshots/terminal.png) | ![Stats Charts](screenshots/stats.png) |
 
-> Save screenshots as `screenshots/*.png` in the repo root and reference them in the table above.
 
 ## Features
 
