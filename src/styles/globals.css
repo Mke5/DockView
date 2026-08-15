@@ -4,6 +4,8 @@
 
 @layer base {
   :root {
+    color-scheme: dark;
+
     /* Backgrounds — warm-tinted dark, not cold blue-black */
     --bg0: #0e0e10;
     --bg1: #141416;
@@ -624,17 +626,25 @@
   .select {
     width: 100%;
     height: 32px;
-    padding: 0 10px;
+    padding: 0 26px 0 10px;
     border-radius: 4px;
     border: 1px solid var(--border-md);
-    background: var(--bg3);
+    background: var(--bg3)
+      url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23a8a8b3' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E")
+      no-repeat right 10px center;
     color: var(--text-0);
     font-size: 12.5px;
     outline: none;
     cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
   }
   .select:focus {
     border-color: var(--blue);
+  }
+  option {
+    background: var(--bg3);
+    color: var(--text-0);
   }
 
   /* Toggle switch */
