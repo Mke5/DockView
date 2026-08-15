@@ -80,6 +80,7 @@ pub fn run() {
             // System
             api::docker::docker_ping,
             api::docker::docker_reconnect,
+            api::docker::set_docker_host,
             api::docker::docker_system_info,
             api::docker::docker_disk_usage,
             // Containers

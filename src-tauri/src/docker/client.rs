@@ -60,6 +60,21 @@ impl DockerClient {
         Ok(())
     }
 
+    /// Reconnect to a different Docker host (e.g. from the Settings view).
+    /// Supports `unix://` paths and `tcp://`/`http(s)://` endpoints.
+    pub async fn reconnect_to(&self, host: &str) -> Result<()> {
+        let docker = connect_to(host)?;
+        docker
+            .ping()
+            .await
+            .with_context(|| format!("Docker daemon unreachable at {host}"))?;
+
+        let mut guard = self.inner.write().await;
+        *guard = Some(Arc::new(docker));
+        tracing::info!("Reconnected to Docker daemon at {host}");
+        Ok(())
+    }
+
     /// Check whether we currently have a live connection.
     pub async fn is_connected(&self) -> bool {
         let guard = self.inner.read().await;
@@ -81,10 +96,37 @@ impl DockerClient {
 
 /// Build a Bollard `Docker` from environment / defaults.
 /// On Linux/macOS this hits `unix:///var/run/docker.sock`.
-/// On Windows it uses the named pipe.
+/// On Windows it uses the named pipe. Override with `DOCKER_HOST`.
 fn connect() -> Result<Docker> {
-    Docker::connect_with_local_defaults()
-        .context("Failed to create Docker client — check that /var/run/docker.sock is accessible")
+    let host =
+        std::env::var("DOCKER_HOST").unwrap_or_else(|_| "unix:///var/run/docker.sock".to_string());
+    connect_to(&host).with_context(|| format!("Failed to create Docker client for {host}"))
+}
+
+/// Connect to a specific Docker endpoint: `unix:///path/to/socket` or a
+/// `tcp://`/`http(s)://` URL. Bare paths are treated as unix sockets.
+pub fn connect_to(host: &str) -> Result<Docker> {
+    if let Some(path) = host.strip_prefix("unix://") {
+        return Docker::connect_with_local(path, 120, bollard::API_DEFAULT_VERSION)
+            .context("Failed to connect via unix socket");
+    }
+
+    let url = if let Some(rest) = host.strip_prefix("tcp://") {
+        format!("http://{rest}")
+    } else if host.starts_with("https://") {
+        return Err(anyhow::anyhow!(
+            "TLS endpoints are not supported yet — use tcp:// or a unix socket"
+        ));
+    } else if let Some(rest) = host.strip_prefix("http://") {
+        rest.to_string()
+    } else {
+        // Assume a bare unix socket path
+        return Docker::connect_with_local(host, 120, bollard::API_DEFAULT_VERSION)
+            .context("Failed to connect via unix socket");
+    };
+
+    Docker::connect_with_http(&url, 120, bollard::API_DEFAULT_VERSION)
+        .context("Failed to connect via tcp")
 }
 
 // ─── HELPER: bytes → human-readable size ─────────────────────────────────────

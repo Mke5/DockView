@@ -1,6 +1,6 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { RefreshCw, Save, RotateCcw } from 'lucide-react';
-import { useSettingsStore } from '../../store';
+import { useAppStore, useSettingsStore } from '../../store';
 import {
   SettingsSection,
   ThemeOption,
@@ -8,6 +8,13 @@ import {
   LoggingDriver,
 } from '../../store/types';
 import { Toggle, Field } from '../shared/ui';
+import {
+  dockerPing,
+  dockerSystemInfo,
+  setDockerHost,
+  SystemInfo,
+} from '../../backend/docker';
+import { isTauri } from '../../backend/utils';
 import {
   checkForUpdates,
   installUpdate,
@@ -17,8 +24,8 @@ import {
 const SECTIONS: { id: SettingsSection; label: string; hint: string }[] = [
   { id: 'general', label: 'General', hint: 'Theme, startup, updates' },
   { id: 'engine', label: 'Engine', hint: 'Host and runtime defaults' },
-  { id: 'resources', label: 'Resources', hint: 'CPU, memory and disk' },
-  { id: 'network', label: 'Network', hint: 'DNS, proxy and IPv6' },
+  { id: 'resources', label: 'Resources', hint: 'Host CPU and memory' },
+  { id: 'network', label: 'Network', hint: 'DNS for new containers' },
   { id: 'keybindings', label: 'Keybindings', hint: 'Keyboard shortcuts' },
   { id: 'about', label: 'About', hint: 'Build info and release channel' },
 ];
@@ -34,6 +41,26 @@ export default function SettingsView() {
     resetSection,
     save,
   } = useSettingsStore();
+  const { setEngineRunning } = useAppStore();
+  const appliedHostRef = useRef(settings.dockerHost);
+  const [applyingHost, setApplyingHost] = useState(false);
+  const [hostError, setHostError] = useState('');
+
+  async function handleSave() {
+    save();
+    if (!isTauri() || settings.dockerHost === appliedHostRef.current) return;
+    setApplyingHost(true);
+    setHostError('');
+    try {
+      await setDockerHost(settings.dockerHost);
+      appliedHostRef.current = settings.dockerHost;
+      setEngineRunning(await dockerPing());
+    } catch (e) {
+      setHostError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setApplyingHost(false);
+    }
+  }
 
   return (
     <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
@@ -108,13 +135,26 @@ export default function SettingsView() {
             </button>
             <button
               className="btn btn-primary"
-              onClick={save}
-              disabled={!dirty}
+              onClick={() => void handleSave()}
+              disabled={!dirty || applyingHost}
             >
-              <Save size={13} /> Save changes
+              <Save size={13} /> {applyingHost ? 'Applying…' : 'Save changes'}
             </button>
           </div>
         </div>
+        {hostError && (
+          <div
+            style={{
+              padding: '8px 24px',
+              fontSize: 11,
+              color: 'var(--red)',
+              background: 'var(--red-dim)',
+              borderBottom: '1px solid var(--border)',
+            }}
+          >
+            Failed to connect to Docker host: {hostError}
+          </div>
+        )}
 
         <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
           {activeSection === 'general' && (
@@ -227,7 +267,7 @@ export default function SettingsView() {
               >
                 <Field
                   label="Docker host"
-                  hint="e.g. unix:///var/run/docker.sock"
+                  hint="Applies on save — unix:// or tcp://"
                 >
                   <input
                     className="input mono"
@@ -244,14 +284,6 @@ export default function SettingsView() {
                     onChange={(e) =>
                       updateSetting('contextName', e.target.value)
                     }
-                  />
-                </Field>
-                <Field label="Certificates path">
-                  <input
-                    className="input mono"
-                    value={settings.certPath}
-                    onChange={(e) => updateSetting('certPath', e.target.value)}
-                    placeholder="/path/to/certs"
                   />
                 </Field>
                 <Field label="Logging driver">
@@ -292,126 +324,33 @@ export default function SettingsView() {
                   />
                 </Field>
               </div>
-              <Toggle
-                label="Enable TLS verification"
-                value={settings.tlsVerify}
-                onChange={(v) => updateSetting('tlsVerify', v)}
-              />
             </SettingsCard>
           )}
 
           {activeSection === 'resources' && (
             <SettingsCard
               title="Resources"
-              subtitle="CPU, memory and disk limits for the Docker runtime"
+              subtitle="Live resources reported by the Docker daemon"
             >
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: 12,
-                  marginBottom: 16,
-                }}
-              >
-                <Field label="CPU limit (cores)">
-                  <input
-                    className="input"
-                    type="number"
-                    value={settings.cpuLimit}
-                    onChange={(e) => updateSetting('cpuLimit', +e.target.value)}
-                  />
-                </Field>
-                <Field label="Memory limit (GB)">
-                  <input
-                    className="input"
-                    type="number"
-                    value={settings.memoryLimit}
-                    onChange={(e) =>
-                      updateSetting('memoryLimit', +e.target.value)
-                    }
-                  />
-                </Field>
-                <Field label="Swap limit (GB)">
-                  <input
-                    className="input"
-                    type="number"
-                    value={settings.swapLimit}
-                    onChange={(e) =>
-                      updateSetting('swapLimit', +e.target.value)
-                    }
-                  />
-                </Field>
-                <Field label="Disk image size (GB)">
-                  <input
-                    className="input"
-                    type="number"
-                    value={settings.diskImageSize}
-                    onChange={(e) =>
-                      updateSetting('diskImageSize', +e.target.value)
-                    }
-                  />
-                </Field>
-              </div>
-              <Toggle
-                label="Enable VirtioFS"
-                hint="Faster file sharing between host and containers"
-                value={settings.enableVirtioFS}
-                onChange={(v) => updateSetting('enableVirtioFS', v)}
-              />
+              <HostResources />
             </SettingsCard>
           )}
 
           {activeSection === 'network' && (
             <SettingsCard
               title="Network"
-              subtitle="DNS, proxy and IPv6 settings"
+              subtitle="DNS server used when running new containers"
             >
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: 12,
-                  marginBottom: 16,
-                }}
+              <Field
+                label="DNS server"
+                hint="Applied to containers run from this app"
               >
-                <Field label="DNS server">
-                  <input
-                    className="input mono"
-                    value={settings.dnsServer}
-                    onChange={(e) => updateSetting('dnsServer', e.target.value)}
-                  />
-                </Field>
-                <Field label="No proxy">
-                  <input
-                    className="input mono"
-                    value={settings.noProxy}
-                    onChange={(e) => updateSetting('noProxy', e.target.value)}
-                  />
-                </Field>
-                <Field label="HTTP proxy">
-                  <input
-                    className="input mono"
-                    value={settings.proxyHttp}
-                    onChange={(e) => updateSetting('proxyHttp', e.target.value)}
-                    placeholder="http://proxy:3128"
-                  />
-                </Field>
-                <Field label="HTTPS proxy">
-                  <input
-                    className="input mono"
-                    value={settings.proxyHttps}
-                    onChange={(e) =>
-                      updateSetting('proxyHttps', e.target.value)
-                    }
-                    placeholder="http://proxy:3128"
-                  />
-                </Field>
-              </div>
-              <Toggle
-                label="Enable IPv6"
-                value={settings.enableIPv6}
-                onChange={(v) => updateSetting('enableIPv6', v)}
-              />
+                <input
+                  className="input mono"
+                  value={settings.dnsServer}
+                  onChange={(e) => updateSetting('dnsServer', e.target.value)}
+                />
+              </Field>
             </SettingsCard>
           )}
 
@@ -507,7 +446,6 @@ export default function SettingsView() {
                   ['Theme', settings.theme],
                   ['Runtime context', settings.contextName],
                   ['Docker host', settings.dockerHost],
-                  ['TLS', settings.tlsVerify ? 'enabled' : 'disabled'],
                 ].map(([k, v]) => (
                   <div
                     key={k}
@@ -547,6 +485,84 @@ export default function SettingsView() {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes >= 1 << 30) return `${(bytes / (1 << 30)).toFixed(1)} GB`;
+  if (bytes >= 1 << 20) return `${(bytes / (1 << 20)).toFixed(0)} MB`;
+  return `${bytes} B`;
+}
+
+function HostResources() {
+  const [info, setInfo] = useState<SystemInfo | null>(null);
+
+  useEffect(() => {
+    if (!isTauri()) return;
+    dockerSystemInfo()
+      .then(setInfo)
+      .catch(() => {});
+  }, []);
+
+  if (!isTauri()) {
+    return (
+      <div style={{ fontSize: 12, color: 'var(--text-2)' }}>
+        Live host resources are available in the native app.
+      </div>
+    );
+  }
+  if (!info) {
+    return (
+      <div style={{ fontSize: 12, color: 'var(--text-2)' }}>
+        Fetching host resources…
+      </div>
+    );
+  }
+
+  const rows: [string, string][] = [
+    ['CPU cores', String(info.cpuCount)],
+    ['Total memory', formatBytes(info.totalMemory)],
+    ['Containers running', String(info.containersRunning)],
+    ['Containers stopped', String(info.containersStopped)],
+    ['Containers paused', String(info.containersPaused)],
+    ['Images', String(info.imagesCount)],
+    ['Kernel', info.kernelVersion],
+    ['Storage driver', info.storageDriver],
+  ];
+
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: 8,
+      }}
+    >
+      {rows.map(([k, v]) => (
+        <div
+          key={k}
+          style={{
+            padding: '10px 12px',
+            borderRadius: 4,
+            border: '1px solid var(--border)',
+            background: 'var(--bg3)',
+          }}
+        >
+          <div
+            className="mono"
+            style={{ fontSize: 10, color: 'var(--text-2)', marginBottom: 3 }}
+          >
+            {k}
+          </div>
+          <div
+            className="mono"
+            style={{ fontSize: 12.5, color: 'var(--text-0)', fontWeight: 500 }}
+          >
+            {v || '—'}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

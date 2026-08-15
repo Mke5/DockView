@@ -33,6 +33,19 @@ pub async fn docker_reconnect(state: State<'_, AppState>) -> CmdResult<bool> {
     Ok(state.reconnect().await)
 }
 
+/// Reconnect the Docker client to a different host (from Settings).
+/// Accepts `unix://` socket paths or `tcp://`/`http(s)://` endpoints.
+#[tauri::command]
+pub async fn set_docker_host(host: String, state: State<'_, AppState>) -> CmdResult<()> {
+    state
+        .docker
+        .reconnect_to(&host)
+        .await
+        .map_err(CommandError::from)?;
+    *state.connected.lock().await = true;
+    Ok(())
+}
+
 /// Fetch overall Docker system info.
 #[tauri::command]
 pub async fn docker_system_info(state: State<'_, AppState>) -> CmdResult<SystemInfo> {

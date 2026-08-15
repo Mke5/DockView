@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { useAppStore } from '../../store';
+import { useAppStore, useSettingsStore } from '../../store';
 import { dockerSystemInfo } from '../../backend/docker';
 import { isTauri } from '../../backend/utils';
 
 export default function StatusBar() {
   const { engineRunning } = useAppStore();
+  const contextName = useSettingsStore((s) => s.settings.contextName);
   const [serverVersion, setServerVersion] = useState('—');
   const [apiVersion, setApiVersion] = useState('v1.46');
 
@@ -44,7 +45,7 @@ export default function StatusBar() {
         />
         Engine {engineRunning ? 'running' : 'stopped'}
       </StatusItem>
-      <StatusItem label="Context">default</StatusItem>
+      <StatusItem label="Context">{contextName}</StatusItem>
       <StatusItem label="API">{apiVersion}</StatusItem>
       {serverVersion !== '—' && (
         <StatusItem label="Docker">{serverVersion}</StatusItem>

@@ -19,6 +19,7 @@ import {
   ContainerStatus,
   useAppStore,
   useContainerStore,
+  useSettingsStore,
 } from '../../store';
 import {
   ContainerGroupKey,
@@ -916,6 +917,7 @@ function RunContainerModal({
 }) {
   const [image, setImage] = useState('');
   const [name, setName] = useState('');
+  const [bindIp, setBindIp] = useState('0.0.0.0');
   const [ports, setPorts] = useState('');
   const [envVars, setEnvVars] = useState('');
   const [cmd, setCmd] = useState('');
@@ -962,6 +964,15 @@ function RunContainerModal({
           autoRemove,
           restartPolicy: restart,
           labels: {},
+          hostIp: bindIp.trim() || '0.0.0.0',
+          dns: useSettingsStore.getState().settings.dnsServer
+            ? [useSettingsStore.getState().settings.dnsServer]
+            : undefined,
+          logging: {
+            driver: useSettingsStore.getState().settings.loggingDriver,
+            maxSize: useSettingsStore.getState().settings.logMaxSize,
+            maxFile: useSettingsStore.getState().settings.logMaxFiles,
+          },
         });
         onRun({
           id,
@@ -1089,6 +1100,14 @@ function RunContainerModal({
             value={ports}
             onChange={(e) => setPorts(e.target.value)}
             placeholder="8080:80, 443:443"
+          />
+        </Field>
+        <Field label="Bind address" hint="Interface to bind published ports on">
+          <input
+            className="input mono"
+            value={bindIp}
+            onChange={(e) => setBindIp(e.target.value)}
+            placeholder="0.0.0.0"
           />
         </Field>
         <Field label="Environment variables" hint="One per line: KEY=VALUE">

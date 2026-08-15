@@ -276,19 +276,8 @@ export interface DockviewSettings {
   crashReports: boolean;
   dockerHost: string;
   contextName: string;
-  tlsVerify: boolean;
-  certPath: string;
   loggingDriver: LoggingDriver;
   logMaxSize: string;
   logMaxFiles: number;
-  cpuLimit: number;
-  memoryLimit: number;
-  swapLimit: number;
-  diskImageSize: number;
-  enableVirtioFS: boolean;
   dnsServer: string;
-  proxyHttp: string;
-  proxyHttps: string;
-  noProxy: string;
-  enableIPv6: boolean;
 }

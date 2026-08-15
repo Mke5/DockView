@@ -205,6 +205,20 @@ pub struct RunContainerOptions {
     pub restart_policy: RestartPolicy,
     pub network: Option<String>,
     pub labels: HashMap<String, String>,
+    /// Interface to bind published ports on. Defaults to `0.0.0.0`.
+    pub host_ip: Option<String>,
+    /// DNS servers for the container (from settings).
+    pub dns: Option<Vec<String>>,
+    /// Logging configuration for the container (from settings).
+    pub logging: Option<RunLogConfig>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RunLogConfig {
+    pub driver: String,
+    pub max_size: Option<String>,
+    pub max_file: Option<u64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

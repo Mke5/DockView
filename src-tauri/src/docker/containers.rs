@@ -313,13 +313,14 @@ impl<'a> ContainerOps<'a> {
         // Build port bindings
         let mut port_bindings: HashMap<String, Option<Vec<PortBinding>>> = HashMap::new();
         let mut exposed_ports: HashMap<String, HashMap<(), ()>> = HashMap::new();
+        let host_ip = opts.host_ip.clone().unwrap_or_else(|| "0.0.0.0".into());
         for pm in &opts.ports {
             let key = format!("{}/{}", pm.container_port, pm.protocol);
             exposed_ports.insert(key.clone(), HashMap::new());
             port_bindings.insert(
                 key,
                 Some(vec![PortBinding {
-                    host_ip: Some("0.0.0.0".into()),
+                    host_ip: Some(host_ip.clone()),
                     host_port: Some(pm.host_port.clone()),
                 }]),
             );
@@ -352,6 +353,25 @@ impl<'a> ContainerOps<'a> {
             },
             auto_remove: Some(opts.auto_remove),
             restart_policy: Some(restart_policy),
+            dns: opts.dns.clone(),
+            log_config: opts.logging.as_ref().map(|l| {
+                use std::collections::HashMap as Map;
+                let mut config: Map<String, String> = Map::new();
+                if let Some(s) = &l.max_size {
+                    config.insert("max-size".to_string(), s.clone());
+                }
+                if let Some(f) = l.max_file {
+                    config.insert("max-file".to_string(), f.to_string());
+                }
+                bollard::models::HostConfigLogConfig {
+                    typ: Some(l.driver.clone()),
+                    config: if config.is_empty() {
+                        None
+                    } else {
+                        Some(config)
+                    },
+                }
+            }),
             ..Default::default()
         };
 

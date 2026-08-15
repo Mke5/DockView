@@ -45,6 +45,8 @@ export interface DiskUsage {
 
 export const dockerPing = () => invoke<boolean>('docker_ping');
 export const dockerReconnect = () => invoke<boolean>('docker_reconnect');
+export const setDockerHost = (host: string) =>
+  invoke<void>('set_docker_host', { host });
 export const dockerSystemInfo = () => invoke<SystemInfo>('docker_system_info');
 export const dockerDiskUsage = () => invoke<DiskUsage>('docker_disk_usage');
 
@@ -147,6 +149,13 @@ export interface RunContainerOptions {
   restartPolicy: RestartPolicy;
   network?: string;
   labels: Record<string, string>;
+  hostIp?: string;
+  dns?: string[];
+  logging?: {
+    driver: string;
+    maxSize?: string;
+    maxFile?: number;
+  };
 }
 
 export interface LogLine {
