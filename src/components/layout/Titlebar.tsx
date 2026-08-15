@@ -1,43 +1,105 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Bell, Search, Settings, X } from 'lucide-react';
-import { useAppStore } from '../../store';
+import { useAppStore, useNotificationStore } from '../../store';
+import { onDockerEvent } from '../../backend/docker';
+import { isTauri } from '../../backend/utils';
+import type { AppNotification } from '../../store/notificationStore';
+
+function formatRelative(ts: number): string {
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 5) return 'just now';
+  if (s < 60) return `${s}s ago`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
+function notificationForEvent(event: {
+  eventType: string;
+  action: string;
+  actorName: string;
+}): { type: AppNotification['type']; text: string } | null {
+  const { eventType, action, actorName } = event;
+  const name = actorName || 'unknown';
+
+  if (eventType === 'container') {
+    switch (action) {
+      case 'start':
+        return { type: 'success', text: `Container "${name}" started` };
+      case 'die':
+        return { type: 'error', text: `Container "${name}" stopped` };
+      case 'kill':
+        return { type: 'warn', text: `Container "${name}" killed` };
+      case 'stop':
+        return { type: 'warn', text: `Container "${name}" stopped` };
+      case 'pause':
+        return { type: 'warn', text: `Container "${name}" paused` };
+      case 'unpause':
+        return { type: 'success', text: `Container "${name}" unpaused` };
+      case 'restart':
+        return { type: 'warn', text: `Container "${name}" restarted` };
+      case 'create':
+        return { type: 'info', text: `Container "${name}" created` };
+      case 'destroy':
+        return { type: 'warn', text: `Container "${name}" removed` };
+      case 'rename':
+        return { type: 'info', text: `Container renamed to "${name}"` };
+    }
+  } else if (eventType === 'image') {
+    switch (action) {
+      case 'pull':
+        return { type: 'success', text: `Pulled image "${name}"` };
+      case 'delete':
+        return { type: 'info', text: `Deleted image "${name}"` };
+      case 'tag':
+        return { type: 'info', text: `Tagged image "${name}"` };
+      case 'untag':
+        return { type: 'info', text: `Untagged image "${name}"` };
+      case 'prune':
+        return { type: 'warn', text: 'Pruned unused images' };
+    }
+  } else if (eventType === 'volume') {
+    switch (action) {
+      case 'create':
+        return { type: 'info', text: `Created volume "${name}"` };
+      case 'destroy':
+        return { type: 'warn', text: `Removed volume "${name}"` };
+    }
+  } else if (eventType === 'network') {
+    switch (action) {
+      case 'create':
+        return { type: 'info', text: `Created network "${name}"` };
+      case 'destroy':
+        return { type: 'warn', text: `Removed network "${name}"` };
+    }
+  }
+  return null;
+}
 
 export default function Titlebar() {
   const { engineRunning, searchQuery, setSearchQuery, setActiveView } =
     useAppStore();
+  const { notifications, add, remove, clearAll, markAllRead } =
+    useNotificationStore();
   const [showNotifs, setShowNotifs] = useState(false);
-  const [notifs, setNotifs] = useState([
-    {
-      id: 1,
-      type: 'warn',
-      text: '1 container exited unexpectedly',
-      time: '2m ago',
-      read: false,
-    },
-    {
-      id: 2,
-      type: 'info',
-      text: 'postgres-db backup completed',
-      time: '14m ago',
-      read: false,
-    },
-    {
-      id: 3,
-      type: 'success',
-      text: 'nginx:alpine pulled successfully',
-      time: '1h ago',
-      read: true,
-    },
-    {
-      id: 4,
-      type: 'error',
-      text: 'Build failed — see logs',
-      time: '2h ago',
-      read: true,
-    },
-  ]);
   const notifRef = useRef<HTMLDivElement>(null);
-  const unread = notifs.filter((n) => !n.read).length;
+  const unread = notifications.filter((n) => !n.read).length;
+
+  useEffect(() => {
+    if (!isTauri()) return;
+    let unlisten: (() => void) | null = null;
+    void onDockerEvent((event) => {
+      const n = notificationForEvent(event);
+      if (n) add(n.type, n.text);
+    }).then((u) => {
+      unlisten = u;
+    });
+    return () => {
+      unlisten?.();
+    };
+  }, [add]);
 
   useEffect(() => {
     const h = (e: MouseEvent) => {
@@ -47,10 +109,6 @@ export default function Titlebar() {
     document.addEventListener('mousedown', h);
     return () => document.removeEventListener('mousedown', h);
   }, []);
-
-  function markAllRead() {
-    setNotifs((p) => p.map((n) => ({ ...n, read: true })));
-  }
 
   const NOTIF_COLOR: Record<string, string> = {
     warn: 'var(--amber)',
@@ -313,12 +371,12 @@ export default function Titlebar() {
                 <button
                   className="btn-ghost"
                   style={{ fontSize: 11 }}
-                  onClick={() => setNotifs([])}
+                  onClick={clearAll}
                 >
                   Clear all
                 </button>
               </div>
-              {notifs.length === 0 ? (
+              {notifications.length === 0 ? (
                 <div
                   style={{
                     padding: '24px 0',
@@ -330,7 +388,7 @@ export default function Titlebar() {
                   No notifications
                 </div>
               ) : (
-                notifs.map((n) => (
+                notifications.map((n) => (
                   <div
                     key={n.id}
                     style={{
@@ -370,15 +428,13 @@ export default function Titlebar() {
                           marginTop: 2,
                         }}
                       >
-                        {n.time}
+                        {formatRelative(n.ts)}
                       </div>
                     </div>
                     <button
                       className="btn-icon"
                       style={{ width: 18, height: 18, flexShrink: 0 }}
-                      onClick={() =>
-                        setNotifs((p) => p.filter((x) => x.id !== n.id))
-                      }
+                      onClick={() => remove(n.id)}
                     >
                       <X size={10} />
                     </button>

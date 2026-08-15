@@ -10,5 +10,6 @@ export { useRegistryStore } from './registryStore';
 export { useLogStore } from './logStore';
 export { useTerminalStore } from './terminalStore';
 export { useSettingsStore } from './settingsStore';
+export { useNotificationStore } from './notificationStore';
 
 export * from './types';
